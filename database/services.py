@@ -1,14 +1,16 @@
+from sqlalchemy import select, cast
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.models.reminder import Reminder
 from database.models.user import User
 
 
 async def upsert_user(
-        session: AsyncSession,
-        telegram_id: int,
-        first_name: str,
-        last_name: str | None = None,
+    session: AsyncSession,
+    telegram_id: int,
+    first_name: str,
+    last_name: str | None = None,
 ):
     """
     Добавление или обновление пользователя
@@ -26,7 +28,7 @@ async def upsert_user(
         }
     )
     stmt = stmt.on_conflict_do_update(
-        index_elements=['telegram_id'],
+        index_elements=["telegram_id"],
         set_=dict(
             first_name=first_name,
             last_name=last_name,
@@ -34,3 +36,17 @@ async def upsert_user(
     )
     await session.execute(stmt)
     await session.commit()
+
+
+async def save_reminder(session: AsyncSession, text: str):
+    stmt = insert(Reminder).values({"text": text})
+    await session.execute(stmt)
+    await session.commit()
+
+
+async def get_last_reminder(session: AsyncSession):
+    stmt = select(Reminder).order_by(Reminder.created_at.desc())
+    result = await session.execute(stmt)
+    await session.commit()
+    if result.scalars() is not None:
+        return result.scalars().first()

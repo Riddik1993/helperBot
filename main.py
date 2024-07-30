@@ -1,5 +1,6 @@
 import asyncio
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from configuration import Configuration
 from configuration.Configuration import load_config
@@ -18,10 +19,7 @@ async def main():
     dp.include_router(admin_handlers.router)
     dp.workflow_data.update(config=config)
 
-    engine = create_async_engine(
-        url=config.db.dsn,
-        echo=config.db.echo
-    )
+    engine = create_async_engine(url=config.db.dsn, echo=config.db.echo)
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -34,5 +32,5 @@ async def main():
     await dp.start_polling(bot)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

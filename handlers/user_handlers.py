@@ -9,6 +9,7 @@ router = Router()
 
 @router.message(CommandStart())
 async def process_start_command(message: Message):
-    main_keyboard = create_inline_kb(1, schedule='Мое расписание',
-                                     tasks='Мои задания', reminder='Памятка об уроке')
-    await message.answer(text=LEXICON_RU['/start'], reply_markup=main_keyboard)
+    main_keyboard = create_inline_kb(
+        1, schedule="Мое расписание", tasks="Мои задания", reminder="Памятка об уроке"
+    )
+    await message.answer(text=LEXICON_RU["/start"], reply_markup=main_keyboard)
