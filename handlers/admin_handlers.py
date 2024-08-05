@@ -17,7 +17,6 @@ router = Router()
 router.message.filter(IsAdmin())
 
 
-# Этот хэндлер срабатывает на команду /start
 @router.message(Command("admin"))
 async def process_admin_command(message: Message):
     main_keyboard = get_admin_main_menu_keyboard()
@@ -41,14 +40,7 @@ async def process_change_reminder(
     query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     current_reminder = await get_last_reminder(session)
-    print(current_reminder)
-    if current_reminder is not None:
-        current_reminder_text = current_reminder.text
-    else:
-        current_reminder_text = ""
-    await query.message.answer(
-        text=LEXICON_RU["change_reminder"] + current_reminder_text
-    )
+    await query.message.answer(text=LEXICON_RU["change_reminder"] + current_reminder)
     await state.set_state(AdminSettingsStates.edit_reminder_text)
 
 

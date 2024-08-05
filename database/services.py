@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.reminder import Reminder
 from database.models.user import User
+from lexicon.lexicon import LEXICON_RU
 
 
 async def upsert_user(
@@ -44,7 +45,16 @@ async def save_reminder(session: AsyncSession, text: str):
     await session.commit()
 
 
-async def get_last_reminder(session: AsyncSession):
+async def get_last_reminder(session: AsyncSession) -> str:
+    current_reminder = await __get_last_reminder_from_db(session)
+    print(current_reminder)
+    if current_reminder is not None:
+        return current_reminder.text
+    else:
+        return LEXICON_RU["reminder_not_set"]
+
+
+async def __get_last_reminder_from_db(session: AsyncSession):
     stmt = select(Reminder).order_by(Reminder.created_at.desc())
     result = await session.execute(stmt)
     await session.commit()
