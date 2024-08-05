@@ -4,7 +4,7 @@ from aiogram.types import TelegramObject, Message
 from cachetools import TTLCache
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.services import upsert_user
+from database.services.user_services import upsert_user
 
 
 class TrackAllUsersMiddleware(BaseMiddleware):

@@ -2,7 +2,8 @@ from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
-from database.services import get_last_reminder
+
+from database.services.reminder_services import get_last_reminder
 from keyboards.inline_keyboard import create_inline_kb
 from keyboards.user_menu_keyboards import get_user_main_menu_keyboard
 from lexicon.lexicon import LEXICON_RU
