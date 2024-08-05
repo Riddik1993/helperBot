@@ -4,5 +4,6 @@ LEXICON_RU: dict[str, str] = {
     "change_reminder": "Вот старый текст памятки.\nВведите новый текст и отправьте сообщение\n\n",
     "reminder_not_set": "Памятка пока не записана",
     "no_students": "У вас пока не учеников",
-    "choose_student": "Выберите ученика"
+    "choose_student": "Выберите ученика",
+    "homework_not_found": "Последнее домашнее задание не найдено"
 }

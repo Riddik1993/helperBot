@@ -1,5 +1,6 @@
 import asyncio
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from configuration import Configuration
@@ -13,7 +14,7 @@ from middlewares.TrackAllUsersMiddleware import TrackAllUsersMiddleware
 async def main():
     config: Configuration = load_config()
 
-    bot = Bot(token=config.telegram.token)
+    bot = Bot(token=config.telegram.token, default=DefaultBotProperties(parse_mode='HTML'))
     dp = Dispatcher()
     dp.include_router(user_handlers.router)
     dp.include_router(admin_handlers.router)

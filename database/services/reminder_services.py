@@ -24,6 +24,4 @@ async def get_last_reminder(session: AsyncSession) -> str:
 async def __get_last_reminder_from_db(session: AsyncSession):
     stmt = select(Reminder).order_by(Reminder.created_at.desc())
     result = await session.execute(stmt)
-    await session.commit()
-    if result.scalars() is not None:
-        return result.scalars().first()
+    return result.scalars().first()
