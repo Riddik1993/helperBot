@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.homework import Homework
@@ -16,6 +16,12 @@ async def get_last_homework_for_student(
     else:
         homework_text = LEXICON_RU["homework_not_found"]
     return homework_text
+
+
+async def save_homework_for_student(session: AsyncSession, student_id: int, homework_text: str):
+    stmt = insert(Homework).values({"student_id": student_id, "text": homework_text})
+    await session.execute(stmt)
+    await session.commit()
 
 
 async def __get_last_homework_for_student_from_db(

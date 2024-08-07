@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from configuration.utils.filters.AdminFilter import IsAdmin
 from database.models.user import User
-from database.services.homework_services import get_last_homework_for_student
+from database.services.homework_services import get_last_homework_for_student, save_homework_for_student
 from database.services.reminder_services import get_last_reminder, save_reminder
 from database.services.user_services import get_all_users
 from keyboards.admin_menu_keyboards import get_admin_main_menu_keyboard, get_students_keyboard
@@ -81,6 +81,25 @@ async def process_user_list(query: CallbackQuery, state: FSMContext, session: As
 
 @router.callback_query(StateFilter(AdminSettingsStates.list_homework))
 async def process_homework_for_student(query: CallbackQuery, state: FSMContext, session: AsyncSession):
-    homework_text = await get_last_homework_for_student(session, int(query.data))
-    keyboard = create_inline_kb(1, homework="Назад")
+    student_id = int(query.data)
+    await state.set_state(AdminSettingsStates.process_homework_for_student)
+    await state.set_data({"student_id": student_id})
+    homework_text = await get_last_homework_for_student(session, student_id)
+    keyboard = create_inline_kb(2, edit_student_homework="Редактировать задание", homework="Назад")
     await query.message.answer(text=homework_text, reply_markup=keyboard)
+
+
+@router.callback_query(StateFilter(AdminSettingsStates.process_homework_for_student))
+async def propose_to_edit_homework_for_student(query: CallbackQuery, state: FSMContext, session: AsyncSession):
+    keyboard = create_inline_kb(2, homework="Назад")
+    await query.message.answer(text=LEXICON_RU["propose_to_insert_homework"], reply_markup=keyboard)
+
+
+@router.message(StateFilter(AdminSettingsStates.process_homework_for_student))
+async def edit_homework_for_student(message: Message, state: FSMContext, session: AsyncSession):
+    data = await state.get_data()
+    student_id = data["student_id"]
+    await save_homework_for_student(session, student_id, message.text)
+    await state.set_state(AdminSettingsStates.list_homework)
+    keyboard = create_inline_kb(1, homework="Назад к списку учеников", admin="Главное меню")
+    await message.answer(text=LEXICON_RU["homework_success_saving"], reply_markup=keyboard)

@@ -4,6 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.services.homework_services import get_last_homework_for_student
 from database.services.reminder_services import get_last_reminder
 from keyboards.inline_keyboard import create_inline_kb
 from keyboards.user_menu_keyboards import get_user_main_menu_keyboard
@@ -31,3 +32,10 @@ async def process_reminder_command(query: CallbackQuery, session: AsyncSession):
     last_reminder = await get_last_reminder(session)
     keyboard = create_inline_kb(1, main_user_menu="Назад")
     await query.message.answer(text=last_reminder, reply_markup=keyboard)
+
+
+@router.callback_query(F.data == "tasks")
+async def show_last_homework(query: CallbackQuery, session: AsyncSession):
+    last_homework = await get_last_homework_for_student(session, query.from_user.id)
+    keyboard = create_inline_kb(1, main_user_menu="Назад")
+    await query.message.answer(text=last_homework, reply_markup=keyboard)
