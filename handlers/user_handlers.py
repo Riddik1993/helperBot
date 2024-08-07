@@ -1,5 +1,6 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,9 +19,11 @@ async def process_start_command(message: Message):
 
 
 @router.callback_query(F.data == "main_user_menu")
-async def process_reminder_command(query: CallbackQuery):
+async def edit_to_main_user_menu(query: CallbackQuery, state: FSMContext):
     main_keyboard = get_user_main_menu_keyboard()
-    await query.message.answer(text=LEXICON_RU["/start"], reply_markup=main_keyboard)
+    await query.message.edit_text(text=LEXICON_RU["/start"])
+    await query.message.edit_reply_markup(reply_markup=main_keyboard)
+    await state.clear()
 
 
 @router.callback_query(F.data == "show_reminder")
