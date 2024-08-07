@@ -30,12 +30,12 @@ async def edit_to_main_user_menu(query: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "show_reminder")
 async def process_reminder_command(query: CallbackQuery, session: AsyncSession):
     last_reminder = await get_last_reminder(session)
-    keyboard = create_inline_kb(1, main_user_menu="Назад")
+    keyboard = create_inline_kb(main_user_menu="Назад")
     await query.message.answer(text=last_reminder, reply_markup=keyboard)
 
 
 @router.callback_query(F.data == "tasks")
 async def show_last_homework(query: CallbackQuery, session: AsyncSession):
     last_homework = await get_last_homework_for_student(session, query.from_user.id)
-    keyboard = create_inline_kb(1, main_user_menu="Назад")
+    keyboard = create_inline_kb(main_user_menu="Назад")
     await query.message.answer(text=last_homework, reply_markup=keyboard)

@@ -36,7 +36,7 @@ async def edit_to_main_admin_menu(query: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "settings")
 async def edit_to_settings_menu(query: CallbackQuery):
-    keyboard = create_inline_kb(1, change_reminder="Изменить памятку", admin="Назад")
+    keyboard = create_inline_kb(change_reminder="Изменить памятку", admin="Назад")
     await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
@@ -45,7 +45,7 @@ async def process_change_reminder(
         query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     current_reminder = await get_last_reminder(session)
-    keyboard = create_inline_kb(1, admin="Назад")
+    keyboard = create_inline_kb(admin="Назад")
     await query.message.answer(text=LEXICON_RU["change_reminder"] + current_reminder, reply_markup=keyboard)
     await state.set_state(AdminSettingsStates.edit_reminder_text)
 
@@ -72,7 +72,7 @@ async def process_user_list(query: CallbackQuery, state: FSMContext, session: As
 
     students = await get_all_users(session)
     if len(students) == 0:
-        keyboard = create_inline_kb(1, admin="Назад")
+        keyboard = create_inline_kb(admin="Назад")
         await query.message.answer(text=LEXICON_RU["no_students"], reply_markup=keyboard)
     else:
         keyboard = get_students_keyboard(students, back_button_callback_data="admin")
@@ -105,5 +105,5 @@ async def edit_homework_for_student(message: Message, state: FSMContext, session
     student_id = data["student_id"]
     await save_homework_for_student(session, student_id, message.text)
     await state.set_state(AdminSettingsStates.list_homework)
-    keyboard = create_inline_kb(1, homework="Назад к списку учеников", admin="Главное меню")
+    keyboard = create_inline_kb(homework="Назад к списку учеников", admin="Главное меню")
     await message.answer(text=LEXICON_RU["homework_success_saving"], reply_markup=keyboard)
