@@ -43,3 +43,10 @@ async def get_all_users(
     stmt = select(User)
     result = await session.execute(stmt)
     return [student for student in result.scalars()]
+
+
+async def get_full_user_name_by_id(session: AsyncSession, user_id: int) -> str:
+    stmt = select(User).where(User.telegram_id == user_id)
+    result = await session.execute(stmt)
+    user: User = result.scalar()
+    return user.first_name + ' ' + user.last_name

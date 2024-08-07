@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.homework import Homework
 from lexicon.lexicon import LEXICON_RU
+from utils.formatting import make_bold
 
 
 async def get_last_homework_for_student(
@@ -12,7 +13,7 @@ async def get_last_homework_for_student(
     student_homework = await __get_last_homework_for_student_from_db(session, student_id)
     if student_homework is not None:
         homework_dttm = student_homework.created_at.strftime("%d.%m.%Y %H:%M")
-        homework_text = f"<b>Задание от {homework_dttm}:</b> \n" + student_homework.text
+        homework_text = make_bold(f"Задание от {homework_dttm}:\n") + student_homework.text
     else:
         homework_text = LEXICON_RU["homework_not_found"]
     return homework_text
