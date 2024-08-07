@@ -23,7 +23,6 @@ async def main():
     engine = create_async_engine(url=config.db.dsn, echo=config.db.echo)
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     Sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
