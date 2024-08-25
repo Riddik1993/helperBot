@@ -6,10 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def upsert_user(
-        session: AsyncSession,
-        telegram_id: int,
-        first_name: str,
-        last_name: str | None = None,
+    session: AsyncSession,
+    telegram_id: int,
+    first_name: str,
+    last_name: str | None = None,
 ):
     """
     Добавление или обновление пользователя
@@ -37,9 +37,7 @@ async def upsert_user(
     await session.commit()
 
 
-async def get_all_users(
-        session: AsyncSession
-) -> list[User]:
+async def get_all_users(session: AsyncSession) -> list[User]:
     stmt = select(User)
     result = await session.execute(stmt)
     return [student for student in result.scalars()]
@@ -49,4 +47,4 @@ async def get_full_user_name_by_id(session: AsyncSession, user_id: int) -> str:
     stmt = select(User).where(User.telegram_id == user_id)
     result = await session.execute(stmt)
     user: User = result.scalar()
-    return user.first_name + ' ' + user.last_name
+    return user.first_name + " " + user.last_name

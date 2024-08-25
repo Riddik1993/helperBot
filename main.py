@@ -14,7 +14,9 @@ from middlewares.TrackAllUsersMiddleware import TrackAllUsersMiddleware
 async def main():
     config: Configuration = load_config()
 
-    bot = Bot(token=config.telegram.token, default=DefaultBotProperties(parse_mode='HTML'))
+    bot = Bot(
+        token=config.telegram.token, default=DefaultBotProperties(parse_mode="HTML")
+    )
     dp = Dispatcher()
     dp.include_router(user_handlers.router)
     dp.include_router(admin_handlers.router)

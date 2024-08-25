@@ -13,4 +13,3 @@ def create_inline_kb(width: int = 1, **kwargs: str) -> InlineKeyboardMarkup:
     kb_builder.row(*buttons, width=width)
 
     return kb_builder.as_markup()
-
