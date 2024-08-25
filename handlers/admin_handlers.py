@@ -151,7 +151,7 @@ async def process_lesson_date_selection(
 ):
     calendar = SimpleCalendar(locale="ru_RU")
     selected, date = await calendar.process_selection(callback_query, callback_data)
-    await state.set_data({"lesson_date":date})
+    await state.set_data({"lesson_date": date})
     if selected:
         await callback_query.message.answer(
             f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
@@ -159,20 +159,20 @@ async def process_lesson_date_selection(
         )
         await state.set_state(AdminStates.choose_next_lesson_time)
 
-@router.message(
-    StateFilter(AdminStates.choose_next_lesson_time))
+
+@router.message(StateFilter(AdminStates.choose_next_lesson_time))
 async def process_lesson_time_selection(
     message: Message,
     state: FSMContext,
     session: AsyncSession,
 ):
-  lesson_time = message.text
-  keyboard = create_inline_kb(
-      schedule="Назад к списку учеников", admin="Главное меню"
-  )
-  print(lesson_time)
-  await state.clear()
-  await message.answer(text=LEXICON_RU["lesson_dttm_saved"], reply_markup=keyboard)
+    lesson_time = message.text
+    keyboard = create_inline_kb(
+        schedule="Назад к списку учеников", admin="Главное меню"
+    )
+    print(lesson_time)
+    await state.clear()
+    await message.answer(text=LEXICON_RU["lesson_dttm_saved"], reply_markup=keyboard)
 
 
 @router.callback_query(StateFilter(AdminStates.choose_next_lesson_date))
