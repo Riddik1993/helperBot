@@ -8,5 +8,7 @@ LEXICON_RU: dict[str, str] = {
     "homework_not_found": "Последнее домашнее задание не найдено",
     "homework_success_saving": "Домашнее задание обновлено",
     "propose_to_insert_homework": "Введите новое задание для ученика",
-    "choose_date_for_lesson": "Пожалуйста, выберите дату следующего занятия:"
+    "choose_date_for_lesson": "Пожалуйста, выберите дату следующего занятия:",
+    "choose_time_for_lesson": "Теперь укажите время урока в формате HH:MM",
+    "lesson_dttm_saved": "Дата и время будущего урока сохранены"
 }

@@ -23,7 +23,7 @@ from keyboards.admin_menu_keyboards import (
 )
 from keyboards.inline_keyboard import create_inline_kb
 from lexicon.lexicon import LEXICON_RU
-from states.admin_states import AdminSettingsStates
+from states.admin_states import AdminStates
 from utils.formatting import make_bold
 
 # Инициализируем роутер уровня модуля
@@ -53,19 +53,19 @@ async def edit_to_settings_menu(query: CallbackQuery):
 
 @router.callback_query(F.data == "change_reminder", StateFilter(default_state))
 async def process_change_reminder(
-        query: CallbackQuery, state: FSMContext, session: AsyncSession
+    query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     current_reminder = await get_last_reminder(session)
     keyboard = create_inline_kb(admin="Назад")
     await query.message.answer(
         text=LEXICON_RU["change_reminder"] + current_reminder, reply_markup=keyboard
     )
-    await state.set_state(AdminSettingsStates.edit_reminder_text)
+    await state.set_state(AdminStates.edit_reminder_text)
 
 
-@router.message(StateFilter(AdminSettingsStates.edit_reminder_text))
+@router.message(StateFilter(AdminStates.edit_reminder_text))
 async def process_reminder_saving(
-        message: Message, state: FSMContext, session: AsyncSession
+    message: Message, state: FSMContext, session: AsyncSession
 ):
     await save_reminder(session=session, text=message.text)
     await message.answer(
@@ -77,13 +77,13 @@ async def process_reminder_saving(
 @router.callback_query(F.data == "schedule")
 @router.callback_query(F.data == "homework")
 async def process_user_list(
-        query: CallbackQuery, state: FSMContext, session: AsyncSession
+    query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     if query.data == "schedule":
-        await state.set_state(AdminSettingsStates.list_schedule)
+        await state.set_state(AdminStates.choose_next_lesson_date)
 
     if query.data == "homework":
-        await state.set_state(AdminSettingsStates.list_homework)
+        await state.set_state(AdminStates.list_homework)
 
     students = await get_all_users(session)
     if len(students) == 0:
@@ -98,13 +98,13 @@ async def process_user_list(
         )
 
 
-@router.callback_query(StateFilter(AdminSettingsStates.list_homework))
+@router.callback_query(StateFilter(AdminStates.list_homework))
 async def process_homework_for_student(
-        query: CallbackQuery, state: FSMContext, session: AsyncSession
+    query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     student_id = int(query.data)
     student_full_name = await get_full_user_name_by_id(session, student_id)
-    await state.set_state(AdminSettingsStates.process_homework_for_student)
+    await state.set_state(AdminStates.process_homework_for_student)
     await state.set_data({"student_id": student_id, "student_name": student_full_name})
     homework_text = await get_last_homework_for_student(session, student_id)
     keyboard = create_inline_kb(
@@ -113,25 +113,25 @@ async def process_homework_for_student(
     await query.message.answer(text=homework_text, reply_markup=keyboard)
 
 
-@router.callback_query(StateFilter(AdminSettingsStates.process_homework_for_student))
+@router.callback_query(StateFilter(AdminStates.process_homework_for_student))
 async def propose_to_edit_homework_for_student(query: CallbackQuery, state: FSMContext):
     keyboard = create_inline_kb(2, homework="Назад")
     state_data = await state.get_data()
     student_name = state_data["student_name"]
     answer_text = (
-            LEXICON_RU["propose_to_insert_homework"] + " " + make_bold(student_name)
+        LEXICON_RU["propose_to_insert_homework"] + " " + make_bold(student_name)
     )
     await query.message.answer(text=answer_text, reply_markup=keyboard)
 
 
-@router.message(StateFilter(AdminSettingsStates.process_homework_for_student))
+@router.message(StateFilter(AdminStates.process_homework_for_student))
 async def edit_homework_for_student(
-        message: Message, state: FSMContext, session: AsyncSession
+    message: Message, state: FSMContext, session: AsyncSession
 ):
     data = await state.get_data()
     student_id = data["student_id"]
     await save_homework_for_student(session, student_id, message.text)
-    await state.set_state(AdminSettingsStates.list_homework)
+    await state.set_state(AdminStates.list_homework)
     keyboard = create_inline_kb(
         homework="Назад к списку учеников", admin="Главное меню"
     )
@@ -140,19 +140,44 @@ async def edit_homework_for_student(
     )
 
 
-@router.callback_query(StateFilter(AdminSettingsStates.list_schedule), SimpleCalendarCallback.filter())
-async def process_schedule_selection(
-        callback_query: CallbackQuery, callback_data: CallbackData, state: FSMContext, session: AsyncSession
+@router.callback_query(
+    StateFilter(AdminStates.choose_next_lesson_date), SimpleCalendarCallback.filter()
+)
+async def process_lesson_date_selection(
+    callback_query: CallbackQuery,
+    callback_data: CallbackData,
+    state: FSMContext,
+    session: AsyncSession,
 ):
     calendar = SimpleCalendar(locale="ru_RU")
     selected, date = await calendar.process_selection(callback_query, callback_data)
+    await state.set_data({"lesson_date":date})
     if selected:
-        await callback_query.message.answer(f'Вы выбрали {date.strftime("%d.%m.%Y")}')
+        await callback_query.message.answer(
+            f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
+            + LEXICON_RU["choose_time_for_lesson"]
+        )
+        await state.set_state(AdminStates.choose_next_lesson_time)
+
+@router.message(
+    StateFilter(AdminStates.choose_next_lesson_time))
+async def process_lesson_time_selection(
+    message: Message,
+    state: FSMContext,
+    session: AsyncSession,
+):
+  lesson_time = message.text
+  keyboard = create_inline_kb(
+      schedule="Назад к списку учеников", admin="Главное меню"
+  )
+  print(lesson_time)
+  await state.clear()
+  await message.answer(text=LEXICON_RU["lesson_dttm_saved"], reply_markup=keyboard)
 
 
-@router.callback_query(StateFilter(AdminSettingsStates.list_schedule))
+@router.callback_query(StateFilter(AdminStates.choose_next_lesson_date))
 async def list_schedule_for_student(
-        query: CallbackQuery, state: FSMContext, session: AsyncSession
+    query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     await query.message.answer(
         LEXICON_RU["choose_date_for_lesson"],
