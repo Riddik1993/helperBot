@@ -53,6 +53,7 @@ async def edit_to_main_admin_menu(query: CallbackQuery, state: FSMContext):
 async def edit_to_settings_menu(query: CallbackQuery):
     keyboard = create_inline_kb(change_reminder="Изменить памятку", list_subjects="Мои предметы",
                                 admin="Назад")
+    await query.message.edit_text(text = LEXICON_RU["settings"])
     await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
@@ -87,8 +88,9 @@ async def list_subjects(
     keyboard = get_subjects_keyboard(current_subjects,
                                      add_subject="добавить предмет",
                                      settings="назад")
-    await query.message.answer(
-        text=LEXICON_RU["list_subjects_in_admin"], reply_markup=keyboard
+    await query.message.edit_text(text=LEXICON_RU["list_subjects_in_admin"])
+    await query.message.edit_reply_markup(
+         reply_markup=keyboard
     )
     await state.clear()
     await state.set_state(AdminStates.list_subjects)
