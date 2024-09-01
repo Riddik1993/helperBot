@@ -3,7 +3,6 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.reminder import Reminder
-
 from lexicon.lexicon import LEXICON_RU
 
 

@@ -6,9 +6,6 @@ from database.models.base import Base
 
 
 class Lesson(Base):
-    """Модель урока, содержащая предмет урока,
-    его дату и время"""
-
     __tablename__ = "lessons"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     student_id: Mapped[int] = mapped_column(Integer)

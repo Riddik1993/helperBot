@@ -6,7 +6,7 @@ from database.models.base import Base
 
 
 class Reminder(Base):
-    __tablename__ = "reminder"
+    __tablename__ = "reminders"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     text: Mapped[str] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

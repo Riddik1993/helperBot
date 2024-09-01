@@ -10,16 +10,18 @@ from aiogram_calendar import SimpleCalendar, get_user_locale
 from aiogram_calendar.schemas import SimpleCalAct, SimpleCalendarCallback
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.models.subject import Subject
 from database.services.homework_services import (
     get_last_homework_for_student,
     save_homework_for_student,
 )
 from database.services.reminder_services import get_last_reminder, save_reminder
+from database.services.subject_services import get_all_subjects, save_new_subject, delete_subject
 from database.services.user_services import get_all_users, get_full_user_name_by_id
 from filters.AdminFilter import IsAdmin
 from keyboards.admin_menu_keyboards import (
     get_admin_main_menu_keyboard,
-    get_students_keyboard,
+    get_students_keyboard, get_subjects_keyboard,
 )
 from keyboards.inline_keyboard import create_inline_kb
 from lexicon.lexicon import LEXICON_RU
@@ -29,6 +31,8 @@ from utils.formatting import make_bold
 # Инициализируем роутер уровня модуля
 router = Router()
 router.message.filter(IsAdmin())
+
+DELETE_SUBJECT_ID_STATE_KEY = "delete_subject_id"
 
 
 @router.message(Command("admin"))
@@ -47,13 +51,14 @@ async def edit_to_main_admin_menu(query: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "settings")
 async def edit_to_settings_menu(query: CallbackQuery):
-    keyboard = create_inline_kb(change_reminder="Изменить памятку", admin="Назад")
+    keyboard = create_inline_kb(change_reminder="Изменить памятку", list_subjects="Мои предметы",
+                                admin="Назад")
     await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(F.data == "change_reminder", StateFilter(default_state))
 async def process_change_reminder(
-    query: CallbackQuery, state: FSMContext, session: AsyncSession
+        query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     current_reminder = await get_last_reminder(session)
     keyboard = create_inline_kb(admin="Назад")
@@ -65,7 +70,7 @@ async def process_change_reminder(
 
 @router.message(StateFilter(AdminStates.edit_reminder_text))
 async def process_reminder_saving(
-    message: Message, state: FSMContext, session: AsyncSession
+        message: Message, state: FSMContext, session: AsyncSession
 ):
     await save_reminder(session=session, text=message.text)
     await message.answer(
@@ -74,10 +79,71 @@ async def process_reminder_saving(
     await state.clear()
 
 
+@router.callback_query(F.data == "list_subjects")
+async def list_subjects(
+        query: CallbackQuery, state: FSMContext, session: AsyncSession
+):
+    current_subjects: list[Subject] = await get_all_subjects(session)
+    keyboard = get_subjects_keyboard(current_subjects,
+                                     add_subject="добавить предмет",
+                                     settings="назад")
+    await query.message.answer(
+        text=LEXICON_RU["list_subjects_in_admin"], reply_markup=keyboard
+    )
+    await state.clear()
+    await state.set_state(AdminStates.list_subjects)
+
+
+@router.callback_query(F.data == "add_subject")
+async def propose_new_subject_saving(
+        query: CallbackQuery, state: FSMContext):
+    keyboard = create_inline_kb(list_subjects="Назад")
+    await query.message.answer(
+        text=LEXICON_RU["propose_add_subject"], reply_markup=keyboard)
+    await state.set_state(AdminStates.adding_new_subject)
+
+
+@router.message(StateFilter(AdminStates.adding_new_subject))
+async def process_subject_saving(
+        message: Message, state: FSMContext, session: AsyncSession
+):
+    keyboard = create_inline_kb(list_subjects="К списку предметов",
+                                admin="Главное меню")
+    await save_new_subject(session=session, subject_name=message.text)
+    await message.answer(
+        text=LEXICON_RU["new_subject_saved"], reply_markup=keyboard
+    )
+    await state.clear()
+
+
+@router.callback_query(StateFilter(AdminStates.list_subjects))
+async def propose_delete_subject(
+        query: CallbackQuery, state: FSMContext
+):
+    keyboard = create_inline_kb(confirm_delete_subject="Да",
+                                list_subjects="Отмена")
+    await state.set_state(AdminStates.deleting_subject)
+    await state.set_data({DELETE_SUBJECT_ID_STATE_KEY: int(query.data)})
+    await query.message.answer(LEXICON_RU["confirm_delete_subject"], reply_markup=keyboard)
+
+
+@router.callback_query(F.data == "confirm_delete_subject", StateFilter(AdminStates.deleting_subject))
+async def process_delete_subject(
+        query: CallbackQuery, state: FSMContext, session: AsyncSession
+):
+    state_data = await state.get_data()
+    subject_id = state_data[DELETE_SUBJECT_ID_STATE_KEY]
+    keyboard = create_inline_kb(list_subjects="К списку предметов",
+                                admin="Главное меню")
+    await delete_subject(session, subject_id)
+    await state.clear()
+    await query.message.answer(LEXICON_RU["subject_deleted"], reply_markup=keyboard)
+
+
 @router.callback_query(F.data == "schedule")
 @router.callback_query(F.data == "homework")
 async def process_user_list(
-    query: CallbackQuery, state: FSMContext, session: AsyncSession
+        query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     if query.data == "schedule":
         await state.set_state(AdminStates.choose_next_lesson_date)
@@ -100,7 +166,7 @@ async def process_user_list(
 
 @router.callback_query(StateFilter(AdminStates.list_homework))
 async def process_homework_for_student(
-    query: CallbackQuery, state: FSMContext, session: AsyncSession
+        query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     student_id = int(query.data)
     student_full_name = await get_full_user_name_by_id(session, student_id)
@@ -119,14 +185,14 @@ async def propose_to_edit_homework_for_student(query: CallbackQuery, state: FSMC
     state_data = await state.get_data()
     student_name = state_data["student_name"]
     answer_text = (
-        LEXICON_RU["propose_to_insert_homework"] + " " + make_bold(student_name)
+            LEXICON_RU["propose_to_insert_homework"] + " " + make_bold(student_name)
     )
     await query.message.answer(text=answer_text, reply_markup=keyboard)
 
 
 @router.message(StateFilter(AdminStates.process_homework_for_student))
 async def edit_homework_for_student(
-    message: Message, state: FSMContext, session: AsyncSession
+        message: Message, state: FSMContext, session: AsyncSession
 ):
     data = await state.get_data()
     student_id = data["student_id"]
@@ -144,10 +210,10 @@ async def edit_homework_for_student(
     StateFilter(AdminStates.choose_next_lesson_date), SimpleCalendarCallback.filter()
 )
 async def process_lesson_date_selection(
-    callback_query: CallbackQuery,
-    callback_data: CallbackData,
-    state: FSMContext,
-    session: AsyncSession,
+        callback_query: CallbackQuery,
+        callback_data: CallbackData,
+        state: FSMContext,
+        session: AsyncSession,
 ):
     calendar = SimpleCalendar(locale="ru_RU")
     selected, date = await calendar.process_selection(callback_query, callback_data)
@@ -162,22 +228,21 @@ async def process_lesson_date_selection(
 
 @router.message(StateFilter(AdminStates.choose_next_lesson_time))
 async def process_lesson_time_selection(
-    message: Message,
-    state: FSMContext,
-    session: AsyncSession,
+        message: Message,
+        state: FSMContext,
+        session: AsyncSession,
 ):
     lesson_time = message.text
     keyboard = create_inline_kb(
         schedule="Назад к списку учеников", admin="Главное меню"
     )
-    print(lesson_time)
     await state.clear()
     await message.answer(text=LEXICON_RU["lesson_dttm_saved"], reply_markup=keyboard)
 
 
 @router.callback_query(StateFilter(AdminStates.choose_next_lesson_date))
 async def list_schedule_for_student(
-    query: CallbackQuery, state: FSMContext, session: AsyncSession
+        query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     await query.message.answer(
         LEXICON_RU["choose_date_for_lesson"],
