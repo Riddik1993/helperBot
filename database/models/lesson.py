@@ -10,7 +10,7 @@ class Lesson(Base, TimestampMixin):
     __tablename__ = "lessons"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     student_id: Mapped[int] = mapped_column(Integer)
-    subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id"), nullable=False)
+    subject_id: Mapped[int] = mapped_column(ForeignKey("subjects.id", ondelete='CASCADE'), nullable=False)
     subject = relationship("Subject", back_populates="lessons", lazy="selectin")
     lesson_dttm: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
