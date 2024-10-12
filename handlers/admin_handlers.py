@@ -10,11 +10,13 @@ from aiogram_calendar import SimpleCalendar, get_user_locale
 from aiogram_calendar.schemas import SimpleCalAct, SimpleCalendarCallback
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from database.models.lesson import Lesson
 from database.models.subject import Subject
 from database.services.homework_services import (
     get_last_homework_for_student,
     save_homework_for_student,
 )
+from database.services.lesson_services import get_all_lessons_by_user
 from database.services.reminder_services import get_last_reminder, save_reminder
 from database.services.subject_services import get_all_subjects, save_new_subject, delete_subject
 from database.services.user_services import get_all_users, get_full_user_name_by_id
@@ -148,7 +150,7 @@ async def process_user_list(
         query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     if query.data == "schedule":
-        await state.set_state(AdminStates.choose_next_lesson_date)
+        await state.set_state(AdminStates.choose_user_for_work_with_schedule)
 
     if query.data == "homework":
         await state.set_state(AdminStates.list_homework)
@@ -241,12 +243,28 @@ async def process_lesson_time_selection(
     await state.clear()
     await message.answer(text=LEXICON_RU["lesson_dttm_saved"], reply_markup=keyboard)
 
-
-@router.callback_query(StateFilter(AdminStates.choose_next_lesson_date))
+@router.callback_query(StateFilter(AdminStates.choose_user_for_work_with_schedule))
 async def list_schedule_for_student(
         query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
-    await query.message.answer(
-        LEXICON_RU["choose_date_for_lesson"],
-        reply_markup=await SimpleCalendar(locale="ru_RU").start_calendar(),
-    )
+    student_id = int(query.data)
+    lessons = await get_all_lessons_by_user(session, student_id)
+    lessons_txt = LEXICON_RU["list_schedule_for_student"] + render_lessons_for_student(lessons)
+    keyboard = create_inline_kb(schedule="Назад", add_lesson="Добавить урок")
+    await query.message.answer(text=lessons_txt, reply_markup=keyboard)
+
+
+def render_lessons_for_student(lessons: list[Lesson]) -> str:
+    lessons_str_lst = [f"{lesson.lesson_dttm.strftime('%d.%m.%Y %H:%M')} - {lesson.subject.name}" for lesson in
+                       lessons]
+    return '\n'.join(lessons_str_lst)
+
+
+# @router.callback_query(StateFilter(AdminStates.choose_next_lesson_date))
+# async def list_schedule_for_student(
+#         query: CallbackQuery, state: FSMContext, session: AsyncSession
+# ):
+#     await query.message.answer(
+#         LEXICON_RU["choose_date_for_lesson"],
+#         reply_markup=await SimpleCalendar(locale="ru_RU").start_calendar(),
+#     )
