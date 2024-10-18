@@ -19,5 +19,6 @@ LEXICON_RU: dict[str, str] = {
     "confirm_delete_subject": "Точно удалить предмет?\n Вместе с предметом удалятся и связанные уроки!",
     "list_subjects": "Выберите предмет",
     "subject_deleted": "Предмет успешно удален!",
-    "list_schedule_for_student": "Расписание: \n\n"
+    "list_schedule_for_student": "Расписание: \n\n",
+    "lesson_saved_succesfully": "Урок успешно сохранен"
 }

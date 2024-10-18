@@ -38,6 +38,7 @@ DELETE_SUBJECT_ID_STATE_KEY = "delete_subject_id"
 STUDENT_ID_STATE_KEY = "student_id"
 SUBJECT_ID_STATE_KEY = "subject_id"
 NEXT_LESSON_DATE_STATE_KEY = "next_lesson_date"
+NEXT_LESSON_TIME_STATE_KEY = "next_lesson_time"
 
 
 @router.message(Command("admin"))
@@ -247,25 +248,35 @@ async def choose_date_for_new_lesson(query: CallbackQuery, state: FSMContext, se
     )
 
 
-@router.callback_query(SimpleCalendarCallback.filter())
-@router.callback_query(StateFilter(AdminStates.choose_date_for_next_lesson))
+@router.callback_query(StateFilter(AdminStates.choose_date_for_next_lesson), SimpleCalendarCallback.filter())
 async def process_lesson_date_selection(
         callback_query: CallbackQuery,
         callback_data: CallbackData,
-        # state: FSMContext,
-        # session: AsyncSession,
+        state: FSMContext,
+        session: AsyncSession,
 ):
     calendar = SimpleCalendar(locale="ru_RU")
     selected, date = await calendar.process_selection(callback_query, callback_data)
     date_formatted = date.strftime("%d.%m.%Y")
-    print(f"Next lesson date is {date_formatted}")
-    # await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
+    await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
     if selected:
         await callback_query.message.answer(
             f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
             + LEXICON_RU["choose_time_for_lesson"]
         )
-        # await state.set_state(AdminStates.choose_next_lesson_time)
+        await state.set_state(AdminStates.choose_next_lesson_time)
+
+
+@router.message(StateFilter(AdminStates.choose_next_lesson_time))
+async def process_lesson_time_selection(
+        message: Message, state: FSMContext, session: AsyncSession
+):
+    lesson_time = message.text
+    # TODO: проверять строку с временем на валидность
+    await state.update_data({NEXT_LESSON_TIME_STATE_KEY: lesson_time})
+    data = await state.get_data()
+    print(data)
+    await message.answer(text=LEXICON_RU["lesson_saved_succesfully"], admin="Главное меню")
 
 
 def render_lessons_for_student(lessons: list[Lesson]) -> str:
