@@ -28,6 +28,7 @@ from keyboards.admin_menu_keyboards import (
 from keyboards.inline_keyboard import create_inline_kb
 from lexicon.lexicon import LEXICON_RU
 from states.admin_states import AdminStates
+from utils.datetime_utils import create_datetime_from_parts
 from utils.formatting import make_bold
 
 # Инициализируем роутер уровня модуля
@@ -275,11 +276,9 @@ async def process_lesson_time_selection(
     # TODO: проверять строку с временем на валидность
     await state.update_data({NEXT_LESSON_TIME_STATE_KEY: lesson_time})
     data = await state.get_data()
-    lesson_dttm_str = data[NEXT_LESSON_DATE_STATE_KEY] + " " + data[NEXT_LESSON_TIME_STATE_KEY]
-    lesson_dttm = datetime.strptime(lesson_dttm_str, "%d.%m.%Y %H:%M")
+    lesson_dttm = create_datetime_from_parts(data[NEXT_LESSON_DATE_STATE_KEY], data[NEXT_LESSON_TIME_STATE_KEY])
     lesson = Lesson(student_id=data["student_id"], subject_id=data["subject_id"],
                     lesson_dttm=lesson_dttm)
-
     keyboard = create_inline_kb(admin="Главное меню")
     await add_new_lesson(session, lesson)
     await message.answer(text=LEXICON_RU["lesson_saved_succesfully"], reply_markup=keyboard)
