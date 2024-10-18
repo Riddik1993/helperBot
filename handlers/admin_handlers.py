@@ -16,7 +16,7 @@ from database.services.homework_services import (
     get_last_homework_for_student,
     save_homework_for_student,
 )
-from database.services.lesson_services import get_all_lessons_by_user
+from database.services.lesson_services import get_all_lessons_by_user, add_new_lesson
 from database.services.reminder_services import get_last_reminder, save_reminder
 from database.services.subject_services import get_all_subjects, save_new_subject, delete_subject
 from database.services.user_services import get_all_users, get_full_user_name_by_id
@@ -275,7 +275,11 @@ async def process_lesson_time_selection(
     # TODO: проверять строку с временем на валидность
     await state.update_data({NEXT_LESSON_TIME_STATE_KEY: lesson_time})
     data = await state.get_data()
-    print(data)
+    lesson_dttm_str = data[NEXT_LESSON_DATE_STATE_KEY] + " " + data[NEXT_LESSON_TIME_STATE_KEY]
+    lesson_dttm = datetime.strptime(lesson_dttm_str, "%d.%m.%Y %H:%M")
+    lesson = Lesson(student_id=data["student_id"], subject_id=data["subject_id"],
+                    lesson_dttm=lesson_dttm)
+    await add_new_lesson(session, lesson)
     await message.answer(text=LEXICON_RU["lesson_saved_succesfully"], admin="Главное меню")
 
 
