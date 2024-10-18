@@ -279,8 +279,10 @@ async def process_lesson_time_selection(
     lesson_dttm = datetime.strptime(lesson_dttm_str, "%d.%m.%Y %H:%M")
     lesson = Lesson(student_id=data["student_id"], subject_id=data["subject_id"],
                     lesson_dttm=lesson_dttm)
+
+    keyboard = create_inline_kb(admin="Главное меню")
     await add_new_lesson(session, lesson)
-    await message.answer(text=LEXICON_RU["lesson_saved_succesfully"], admin="Главное меню")
+    await message.answer(text=LEXICON_RU["lesson_saved_succesfully"], reply_markup=keyboard)
 
 
 def render_lessons_for_student(lessons: list[Lesson]) -> str:
