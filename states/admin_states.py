@@ -9,6 +9,7 @@ class AdminStates(StatesGroup):
     deleting_subject = State()  # Состояние удаления предмета
     list_homework = State()  # Состояние просмотра домашних заданий
     process_homework_for_student = State()  # работа с д/з конкретного студента
-    choose_user_for_work_with_schedule = State() # работа с расписанием студента
-    choose_next_lesson_date = State()  # Состояние выбора даты следующего урока
+    choose_user_for_work_with_schedule = State()  # работа с расписанием студента
+    choose_subject_for_new_lesson = State()
+    choose_date_for_next_lesson = State()  # Состояние выбора даты следующего урока
     choose_next_lesson_time = State()  # Состояние выбора времени следующего урока

@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.lesson import Lesson
@@ -16,3 +16,8 @@ async def get_all_lessons_by_user(
     )
     result = await session.execute(stmt)
     return result.scalars().all()
+
+async def add_new_lesson(session: AsyncSession, subject_name: str):
+    stmt = insert(Lesson).values({"name": subject_name})
+    await session.execute(stmt)
+    await session.commit()

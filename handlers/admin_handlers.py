@@ -35,6 +35,9 @@ router = Router()
 router.message.filter(IsAdmin())
 
 DELETE_SUBJECT_ID_STATE_KEY = "delete_subject_id"
+STUDENT_ID_STATE_KEY = "student_id"
+SUBJECT_ID_STATE_KEY = "subject_id"
+NEXT_LESSON_DATE_STATE_KEY = "next_lesson_date"
 
 
 @router.message(Command("admin"))
@@ -55,7 +58,7 @@ async def edit_to_main_admin_menu(query: CallbackQuery, state: FSMContext):
 async def edit_to_settings_menu(query: CallbackQuery):
     keyboard = create_inline_kb(change_reminder="Изменить памятку", list_subjects="Мои предметы",
                                 admin="Назад")
-    await query.message.edit_text(text = LEXICON_RU["settings"])
+    await query.message.edit_text(text=LEXICON_RU["settings"])
     await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
@@ -92,7 +95,7 @@ async def list_subjects(
                                      settings="назад")
     await query.message.edit_text(text=LEXICON_RU["list_subjects_in_admin"])
     await query.message.edit_reply_markup(
-         reply_markup=keyboard
+        reply_markup=keyboard
     )
     await state.clear()
     await state.set_state(AdminStates.list_subjects)
@@ -210,61 +213,62 @@ async def edit_homework_for_student(
     )
 
 
-@router.callback_query(
-    StateFilter(AdminStates.choose_next_lesson_date), SimpleCalendarCallback.filter()
-)
-async def process_lesson_date_selection(
-        callback_query: CallbackQuery,
-        callback_data: CallbackData,
-        state: FSMContext,
-        session: AsyncSession,
-):
-    calendar = SimpleCalendar(locale="ru_RU")
-    selected, date = await calendar.process_selection(callback_query, callback_data)
-    await state.set_data({"lesson_date": date})
-    if selected:
-        await callback_query.message.answer(
-            f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
-            + LEXICON_RU["choose_time_for_lesson"]
-        )
-        await state.set_state(AdminStates.choose_next_lesson_time)
-
-
-@router.message(StateFilter(AdminStates.choose_next_lesson_time))
-async def process_lesson_time_selection(
-        message: Message,
-        state: FSMContext,
-        session: AsyncSession,
-):
-    lesson_time = message.text
-    keyboard = create_inline_kb(
-        schedule="Назад к списку учеников", admin="Главное меню"
-    )
-    await state.clear()
-    await message.answer(text=LEXICON_RU["lesson_dttm_saved"], reply_markup=keyboard)
-
 @router.callback_query(StateFilter(AdminStates.choose_user_for_work_with_schedule))
 async def list_schedule_for_student(
         query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
+    await state.clear()
     student_id = int(query.data)
+    await state.set_data({STUDENT_ID_STATE_KEY: student_id})
     lessons = await get_all_lessons_by_user(session, student_id)
     lessons_txt = LEXICON_RU["list_schedule_for_student"] + render_lessons_for_student(lessons)
     keyboard = create_inline_kb(schedule="Назад", add_lesson="Добавить урок")
     await query.message.answer(text=lessons_txt, reply_markup=keyboard)
 
 
+@router.callback_query(F.data == "add_lesson")
+async def choose_subject_for_new_lesson(query: CallbackQuery, state: FSMContext, session: AsyncSession
+                                        ):
+    await state.set_state(AdminStates.choose_subject_for_new_lesson)
+    subjects = await get_all_subjects(session)
+    keyboard = get_subjects_keyboard(subjects)
+    await query.message.answer(text=LEXICON_RU["list_subjects"], reply_markup=keyboard)
+
+
+@router.callback_query(StateFilter(AdminStates.choose_subject_for_new_lesson))
+async def choose_date_for_new_lesson(query: CallbackQuery, state: FSMContext, session: AsyncSession
+                                     ):
+    await state.set_state(AdminStates.choose_date_for_next_lesson)
+    subject_id = int(query.data)
+    await state.update_data({SUBJECT_ID_STATE_KEY: subject_id})
+    await query.message.answer(
+        LEXICON_RU["choose_date_for_lesson"],
+        reply_markup=await SimpleCalendar(locale="ru_RU").start_calendar(),
+    )
+
+
+@router.callback_query(SimpleCalendarCallback.filter())
+@router.callback_query(StateFilter(AdminStates.choose_date_for_next_lesson))
+async def process_lesson_date_selection(
+        callback_query: CallbackQuery,
+        callback_data: CallbackData,
+        # state: FSMContext,
+        # session: AsyncSession,
+):
+    calendar = SimpleCalendar(locale="ru_RU")
+    selected, date = await calendar.process_selection(callback_query, callback_data)
+    date_formatted = date.strftime("%d.%m.%Y")
+    print(f"Next lesson date is {date_formatted}")
+    # await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
+    if selected:
+        await callback_query.message.answer(
+            f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
+            + LEXICON_RU["choose_time_for_lesson"]
+        )
+        # await state.set_state(AdminStates.choose_next_lesson_time)
+
+
 def render_lessons_for_student(lessons: list[Lesson]) -> str:
     lessons_str_lst = [f"{lesson.lesson_dttm.strftime('%d.%m.%Y %H:%M')} - {lesson.subject.name}" for lesson in
                        lessons]
     return '\n'.join(lessons_str_lst)
-
-
-# @router.callback_query(StateFilter(AdminStates.choose_next_lesson_date))
-# async def list_schedule_for_student(
-#         query: CallbackQuery, state: FSMContext, session: AsyncSession
-# ):
-#     await query.message.answer(
-#         LEXICON_RU["choose_date_for_lesson"],
-#         reply_markup=await SimpleCalendar(locale="ru_RU").start_calendar(),
-#     )
