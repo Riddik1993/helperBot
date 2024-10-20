@@ -26,7 +26,7 @@ from keyboards.admin_menu_keyboards import (
     get_students_keyboard, get_subjects_keyboard,
 )
 from keyboards.inline_keyboard import create_inline_kb
-from lexicon.lexicon import LEXICON_RU
+from lexicon.lexicon import LEXICON_RU, LexiconRu
 from states.admin_states import AdminStates
 from utils.datetime_utils import create_datetime_from_parts, check_time_str_format
 from utils.formatting import make_bold
@@ -60,7 +60,7 @@ async def edit_to_main_admin_menu(query: CallbackQuery, state: FSMContext):
 async def edit_to_settings_menu(query: CallbackQuery):
     keyboard = create_inline_kb(change_reminder="Изменить памятку", list_subjects="Мои предметы",
                                 admin="Назад")
-    await query.message.edit_text(text=LEXICON_RU["settings"])
+    await query.message.edit_text(text=LexiconRu.settings.value)
     await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
@@ -95,7 +95,7 @@ async def list_subjects(
     keyboard = get_subjects_keyboard(current_subjects,
                                      add_subject="добавить предмет",
                                      settings="назад")
-    await query.message.edit_text(text=LEXICON_RU["list_subjects_in_admin"])
+    await query.message.edit_text(text=LexiconRu.list_subjects_in_admin.value)
     await query.message.edit_reply_markup(
         reply_markup=keyboard
     )
@@ -108,7 +108,7 @@ async def propose_new_subject_saving(
         query: CallbackQuery, state: FSMContext):
     keyboard = create_inline_kb(list_subjects="Назад")
     await query.message.answer(
-        text=LEXICON_RU["propose_add_subject"], reply_markup=keyboard)
+        text=LexiconRu.propose_add_subject.value, reply_markup=keyboard)
     await state.set_state(AdminStates.adding_new_subject)
 
 
