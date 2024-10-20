@@ -5,7 +5,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
 from aiogram_calendar import SimpleCalendar, get_user_locale
 from aiogram_calendar.schemas import SimpleCalAct, SimpleCalendarCallback
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -247,6 +247,9 @@ async def choose_date_for_new_lesson(query: CallbackQuery, state: FSMContext, se
         LEXICON_RU["choose_date_for_lesson"],
         reply_markup=await SimpleCalendar(locale="ru_RU").start_calendar(),
     )
+    await query.message.answer(LEXICON_RU["press_for_cancel"],
+                               reply_markup=create_inline_kb(admin="отмена"),
+                               )
 
 
 @router.callback_query(StateFilter(AdminStates.choose_date_for_next_lesson), SimpleCalendarCallback.filter())

@@ -22,5 +22,6 @@ LEXICON_RU: dict[str, str] = {
     "subject_deleted": "Предмет успешно удален!",
     "list_schedule_for_student": "Расписание: \n\n",
     "lesson_saved_succesfully": "Урок успешно сохранен",
-    "wrong_lesson_time_format": "Неверный формат времени! \n Введите время в формате HH:MM"
+    "wrong_lesson_time_format": "Неверный формат времени! \n Введите время в формате HH:MM",
+    "press_for_cancel": "Нажмите здесь для отмены"
 }
