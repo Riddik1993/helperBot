@@ -6,6 +6,7 @@ LEXICON_RU: dict[str, str] = {
     "reminder_not_set": "Памятка пока не записана",
     "no_students": "У вас пока не учеников",
     "choose_student": "Выберите ученика",
+    "choose_student_for_schedule": "Выберите ученика для просмотра расписания",
     "homework_not_found": "Последнее домашнее задание не найдено",
     "homework_success_saving": "Домашнее задание обновлено",
     "propose_to_insert_homework": "Введите новое задание для ученика",

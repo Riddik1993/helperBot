@@ -233,7 +233,7 @@ async def choose_subject_for_new_lesson(query: CallbackQuery, state: FSMContext,
                                         ):
     await state.set_state(AdminStates.choose_subject_for_new_lesson)
     subjects = await get_all_subjects(session)
-    keyboard = get_subjects_keyboard(subjects)
+    keyboard = get_subjects_keyboard(subjects, admin="отмена")
     await query.message.answer(text=LEXICON_RU["list_subjects"], reply_markup=keyboard)
 
 
@@ -261,9 +261,10 @@ async def process_lesson_date_selection(
     date_formatted = date.strftime("%d.%m.%Y")
     await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
     if selected:
+        keyboard = create_inline_kb(admin="отмена")
         await callback_query.message.answer(
             f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
-            + LEXICON_RU["choose_time_for_lesson"]
+            + LEXICON_RU["choose_time_for_lesson"], reply_markup=keyboard
         )
         await state.set_state(AdminStates.choose_next_lesson_time)
 
