@@ -1,5 +1,5 @@
 from keyboards.StudentKeysData import StudentKeysData
-from keyboards.inline_keyboard import create_inline_kb, create_inline_keyboard
+from keyboards.inline_keyboard import create_inline_keyboard
 
 
 def get_user_main_menu_keyboard():

@@ -21,6 +21,7 @@ from database.services.reminder_services import get_last_reminder, save_reminder
 from database.services.subject_services import get_all_subjects, save_new_subject, delete_subject
 from database.services.user_services import get_all_users, get_full_user_name_by_id
 from filters.AdminFilter import IsAdmin
+from keyboards.AdminKeysData import AdminKeysData
 from keyboards.admin_menu_keyboards import (
     get_admin_main_menu_keyboard,
     get_students_keyboard, get_subjects_keyboard,
@@ -48,7 +49,7 @@ async def process_admin_command(message: Message):
     await message.answer(text=LEXICON_RU["/admin"], reply_markup=main_keyboard)
 
 
-@router.callback_query(F.data == "admin")
+@router.callback_query(F.data == AdminKeysData.admin.value)
 async def edit_to_main_admin_menu(query: CallbackQuery, state: FSMContext):
     main_keyboard = get_admin_main_menu_keyboard()
     await query.message.edit_text(text=LEXICON_RU["/admin"])
@@ -56,7 +57,7 @@ async def edit_to_main_admin_menu(query: CallbackQuery, state: FSMContext):
     await state.clear()
 
 
-@router.callback_query(F.data == "settings")
+@router.callback_query(F.data == AdminKeysData.settings.value)
 async def edit_to_settings_menu(query: CallbackQuery):
     keyboard = create_inline_kb(change_reminder="Изменить памятку", list_subjects="Мои предметы",
                                 admin="Назад")

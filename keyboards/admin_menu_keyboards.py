@@ -2,15 +2,17 @@ from aiogram.types import InlineKeyboardMarkup
 
 from database.models.subject import Subject
 from database.models.user import User
-from keyboards.inline_keyboard import create_inline_kb
+from keyboards.AdminKeysData import AdminKeysData
+from keyboards.inline_keyboard import create_inline_kb, create_inline_keyboard
+from lexicon.AdminKeysText import AdminKeysText
 
 back_key_name = "Назад"
 
 
 def get_admin_main_menu_keyboard():
-    return create_inline_kb(
-        schedule="Расписание", homework="Домашние задания", settings="Настройки"
-    )
+    return create_inline_keyboard({AdminKeysData.schedule.value: AdminKeysText.schedule.value,
+                                   AdminKeysData.homework.value: AdminKeysText.homework.value,
+                                   AdminKeysData.settings.value: AdminKeysText.settings.value})
 
 
 def get_students_keyboard(
