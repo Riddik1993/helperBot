@@ -26,7 +26,8 @@ from keyboards.admin_menu_keyboards import (
     get_admin_main_menu_keyboard,
     get_students_keyboard, get_subjects_keyboard,
 )
-from keyboards.inline_keyboard import create_inline_kb
+from keyboards.inline_keyboard import create_inline_kb, create_inline_keyboard
+from lexicon.AdminKeysText import AdminKeysText
 from lexicon.lexicon import LEXICON_RU, LexiconRu
 from states.admin_states import AdminStates
 from utils.datetime_utils import create_datetime_from_parts, check_time_str_format
@@ -59,18 +60,19 @@ async def edit_to_main_admin_menu(query: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == AdminKeysData.settings.value)
 async def edit_to_settings_menu(query: CallbackQuery):
-    keyboard = create_inline_kb(change_reminder="Изменить памятку", list_subjects="Мои предметы",
-                                admin="Назад")
+    keyboard = create_inline_keyboard({AdminKeysData.change_reminder.value: AdminKeysText.change_reminder.value,
+                                       AdminKeysData.list_subjects.value: AdminKeysText.list_subjects.value,
+                                       AdminKeysData.admin.value: AdminKeysText.back.value})
     await query.message.edit_text(text=LexiconRu.settings.value)
     await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
-@router.callback_query(F.data == "change_reminder", StateFilter(default_state))
+@router.callback_query(F.data == AdminKeysData.change_reminder.value, StateFilter(default_state))
 async def process_change_reminder(
         query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     current_reminder = await get_last_reminder(session)
-    keyboard = create_inline_kb(admin="Назад")
+    keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.back.value})
     await query.message.answer(
         text=LEXICON_RU["change_reminder"] + current_reminder, reply_markup=keyboard
     )
@@ -88,7 +90,7 @@ async def process_reminder_saving(
     await state.clear()
 
 
-@router.callback_query(F.data == "list_subjects")
+@router.callback_query(F.data == AdminKeysData.list_subjects.value)
 async def list_subjects(
         query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
@@ -104,7 +106,7 @@ async def list_subjects(
     await state.set_state(AdminStates.list_subjects)
 
 
-@router.callback_query(F.data == "add_subject")
+@router.callback_query(F.data == AdminKeysData.add_subject.value)
 async def propose_new_subject_saving(
         query: CallbackQuery, state: FSMContext):
     keyboard = create_inline_kb(list_subjects="Назад")

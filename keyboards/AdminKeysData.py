@@ -10,3 +10,6 @@ class AdminKeysData(enum.Enum):
     schedule = "schedule"
     homework = "homework"
     settings = "settings"
+    change_reminder = "change_reminder"
+    list_subjects = "list_subjects"
+    add_subject = "add_subject"
