@@ -187,15 +187,16 @@ async def process_homework_for_student(
     await state.set_state(AdminStates.process_homework_for_student)
     await state.set_data({"student_id": student_id, "student_name": student_full_name})
     homework_text = await get_last_homework_for_student(session, student_id)
-    keyboard = create_inline_kb(
-        2, edit_student_homework="Редактировать задание", homework="Назад"
-    )
+    keyboard = create_inline_keyboard(
+        {AdminKeysData.edit_student_homework.value: AdminKeysText.edit_student_homework.value,
+         AdminKeysData.homework.value: AdminKeysText.back.value},
+        width=2)
     await query.message.answer(text=homework_text, reply_markup=keyboard)
 
 
 @router.callback_query(StateFilter(AdminStates.process_homework_for_student))
 async def propose_to_edit_homework_for_student(query: CallbackQuery, state: FSMContext):
-    keyboard = create_inline_kb(2, homework="Назад")
+    keyboard = create_inline_keyboard({AdminKeysData.homework.value: AdminKeysText.back.value})
     state_data = await state.get_data()
     student_name = state_data["student_name"]
     answer_text = (
@@ -212,9 +213,8 @@ async def edit_homework_for_student(
     student_id = data["student_id"]
     await save_homework_for_student(session, student_id, message.text)
     await state.set_state(AdminStates.list_homework)
-    keyboard = create_inline_kb(
-        homework="Назад к списку учеников", admin="Главное меню"
-    )
+    keyboard = create_inline_keyboard({AdminKeysData.homework.value: AdminKeysText.go_to_students_list.value,
+                                       AdminKeysData.admin.value: AdminKeysText.main_menu.value})
     await message.answer(
         text=LEXICON_RU["homework_success_saving"], reply_markup=keyboard
     )
