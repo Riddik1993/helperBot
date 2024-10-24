@@ -32,3 +32,9 @@ def get_subjects_keyboard(
     subject_keys = {str(subject.id): subject.name for subject in subjects}
     subject_keys.update(additional_keys)
     return create_inline_kb(**subject_keys)
+
+
+def create_subjects_keyboard(subjects: list[Subject], additional_keys: dict[str, str]) -> InlineKeyboardMarkup:
+    subject_keys = {str(subject.id): subject.name for subject in subjects}
+    subject_keys.update(additional_keys)
+    return create_inline_keyboard(subject_keys)

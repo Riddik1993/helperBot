@@ -24,7 +24,7 @@ from filters.AdminFilter import IsAdmin
 from keyboards.AdminKeysData import AdminKeysData
 from keyboards.admin_menu_keyboards import (
     get_admin_main_menu_keyboard,
-    get_students_keyboard, get_subjects_keyboard,
+    get_students_keyboard, get_subjects_keyboard, create_subjects_keyboard,
 )
 from keyboards.inline_keyboard import create_inline_kb, create_inline_keyboard
 from lexicon.AdminKeysText import AdminKeysText
@@ -95,9 +95,10 @@ async def list_subjects(
         query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     current_subjects: list[Subject] = await get_all_subjects(session)
-    keyboard = get_subjects_keyboard(current_subjects,
-                                     add_subject="добавить предмет",
-                                     settings="назад")
+    keyboard = create_subjects_keyboard(current_subjects,
+                                        {AdminKeysData.add_subject.value: AdminKeysText.add_subject.value,
+                                         AdminKeysData.settings.value: AdminKeysText.back.value
+                                         })
     await query.message.edit_text(text=LexiconRu.list_subjects_in_admin.value)
     await query.message.edit_reply_markup(
         reply_markup=keyboard
@@ -109,7 +110,7 @@ async def list_subjects(
 @router.callback_query(F.data == AdminKeysData.add_subject.value)
 async def propose_new_subject_saving(
         query: CallbackQuery, state: FSMContext):
-    keyboard = create_inline_kb(list_subjects="Назад")
+    keyboard = create_inline_keyboard({AdminKeysData.list_subjects.value: AdminKeysText.back.value})
     await query.message.answer(
         text=LexiconRu.propose_add_subject.value, reply_markup=keyboard)
     await state.set_state(AdminStates.adding_new_subject)
@@ -119,8 +120,8 @@ async def propose_new_subject_saving(
 async def process_subject_saving(
         message: Message, state: FSMContext, session: AsyncSession
 ):
-    keyboard = create_inline_kb(list_subjects="К списку предметов",
-                                admin="Главное меню")
+    keyboard = create_inline_keyboard({AdminKeysData.list_subjects.value: AdminKeysText.go_to_list_subjects.value,
+                                       AdminKeysData.admin.value: AdminKeysText.main_menu.value})
     await save_new_subject(session=session, subject_name=message.text)
     await message.answer(
         text=LEXICON_RU["new_subject_saved"], reply_markup=keyboard
@@ -132,21 +133,22 @@ async def process_subject_saving(
 async def propose_delete_subject(
         query: CallbackQuery, state: FSMContext
 ):
-    keyboard = create_inline_kb(confirm_delete_subject="Да",
-                                list_subjects="Отмена")
+    keyboard = create_inline_keyboard({AdminKeysData.confirm_delete_subject.value: AdminKeysText.agree.value,
+                                       AdminKeysData.list_subjects.value: AdminKeysText.cancel.value})
     await state.set_state(AdminStates.deleting_subject)
     await state.set_data({DELETE_SUBJECT_ID_STATE_KEY: int(query.data)})
     await query.message.answer(LEXICON_RU["confirm_delete_subject"], reply_markup=keyboard)
 
 
-@router.callback_query(F.data == "confirm_delete_subject", StateFilter(AdminStates.deleting_subject))
+@router.callback_query(F.data == AdminKeysData.confirm_delete_subject.value,
+                       StateFilter(AdminStates.deleting_subject))
 async def process_delete_subject(
         query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
     state_data = await state.get_data()
     subject_id = state_data[DELETE_SUBJECT_ID_STATE_KEY]
-    keyboard = create_inline_kb(list_subjects="К списку предметов",
-                                admin="Главное меню")
+    keyboard = create_inline_keyboard({AdminKeysData.list_subjects.value: AdminKeysText.go_to_list_subjects.value,
+                                       AdminKeysData.admin.value: AdminKeysText.main_menu.value})
     await delete_subject(session, subject_id)
     await state.clear()
     await query.message.answer(LEXICON_RU["subject_deleted"], reply_markup=keyboard)
