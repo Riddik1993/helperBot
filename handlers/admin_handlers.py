@@ -24,9 +24,9 @@ from filters.AdminFilter import IsAdmin
 from keyboards.AdminKeysData import AdminKeysData
 from keyboards.admin_menu_keyboards import (
     get_admin_main_menu_keyboard,
-    get_students_keyboard, get_subjects_keyboard, create_subjects_keyboard, create_students_keyboard,
+    create_subjects_keyboard, create_students_keyboard,
 )
-from keyboards.inline_keyboard import create_inline_kb, create_inline_keyboard
+from keyboards.inline_keyboard import create_inline_keyboard
 from lexicon.AdminKeysText import AdminKeysText
 from lexicon.lexicon import LEXICON_RU, LexiconRu
 from states.admin_states import AdminStates
@@ -271,7 +271,7 @@ async def choose_date_for_new_lesson(query: CallbackQuery, state: FSMContext, se
         date_formatted = date.strftime("%d.%m.%Y")
         await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
         if selected:
-            keyboard = create_inline_keyboard({AdminKeysData.admin.value:AdminKeysText.cancel.value})
+            keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.cancel.value})
             await callback_query.message.answer(
                 f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
                 + LEXICON_RU["choose_time_for_lesson"], reply_markup=keyboard
