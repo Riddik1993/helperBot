@@ -26,6 +26,17 @@ def get_students_keyboard(
     return create_inline_kb(**student_keys)
 
 
+def create_students_keyboard(
+        students: list[User], additional_keys: dict[str, str]
+) -> InlineKeyboardMarkup:
+    student_keys = {
+        str(student.telegram_id): student.first_name + " " + student.last_name
+        for student in students
+    }
+    student_keys.update(additional_keys)
+    return create_inline_keyboard(student_keys)
+
+
 def get_subjects_keyboard(
         subjects: list[Subject], **additional_keys
 ) -> InlineKeyboardMarkup:

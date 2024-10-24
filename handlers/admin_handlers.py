@@ -24,7 +24,7 @@ from filters.AdminFilter import IsAdmin
 from keyboards.AdminKeysData import AdminKeysData
 from keyboards.admin_menu_keyboards import (
     get_admin_main_menu_keyboard,
-    get_students_keyboard, get_subjects_keyboard, create_subjects_keyboard,
+    get_students_keyboard, get_subjects_keyboard, create_subjects_keyboard, create_students_keyboard,
 )
 from keyboards.inline_keyboard import create_inline_kb, create_inline_keyboard
 from lexicon.AdminKeysText import AdminKeysText
@@ -154,25 +154,25 @@ async def process_delete_subject(
     await query.message.answer(LEXICON_RU["subject_deleted"], reply_markup=keyboard)
 
 
-@router.callback_query(F.data == "schedule")
-@router.callback_query(F.data == "homework")
+@router.callback_query(F.data == AdminKeysData.schedule.value)
+@router.callback_query(F.data == AdminKeysData.homework.value)
 async def process_user_list(
         query: CallbackQuery, state: FSMContext, session: AsyncSession
 ):
-    if query.data == "schedule":
+    if query.data == AdminKeysData.schedule.value:
         await state.set_state(AdminStates.choose_user_for_work_with_schedule)
 
-    if query.data == "homework":
+    if query.data == AdminKeysData.homework.value:
         await state.set_state(AdminStates.list_homework)
 
     students = await get_all_users(session)
     if len(students) == 0:
-        keyboard = create_inline_kb(admin="Назад")
+        keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.back.value})
         await query.message.answer(
             text=LEXICON_RU["no_students"], reply_markup=keyboard
         )
     else:
-        keyboard = get_students_keyboard(students, back_button_callback_data="admin")
+        keyboard = create_students_keyboard(students, {AdminKeysData.admin.value: AdminKeysText.back.value})
         await query.message.answer(
             text=LEXICON_RU["choose_student"], reply_markup=keyboard
         )
