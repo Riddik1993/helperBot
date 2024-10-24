@@ -229,16 +229,18 @@ async def list_schedule_for_student(
     await state.set_data({STUDENT_ID_STATE_KEY: student_id})
     lessons = await get_all_lessons_by_user(session, student_id)
     lessons_txt = LEXICON_RU["list_schedule_for_student"] + render_lessons_for_student(lessons)
-    keyboard = create_inline_kb(schedule="Назад", add_lesson="Добавить урок")
+    keyboard = create_inline_keyboard({AdminKeysData.schedule.value: AdminKeysText.back.value,
+                                       AdminKeysData.add_lesson.value: AdminKeysText.add_lesson.value
+                                       })
     await query.message.answer(text=lessons_txt, reply_markup=keyboard)
 
 
-@router.callback_query(F.data == "add_lesson")
+@router.callback_query(F.data == AdminKeysData.add_lesson.value)
 async def choose_subject_for_new_lesson(query: CallbackQuery, state: FSMContext, session: AsyncSession
                                         ):
     await state.set_state(AdminStates.choose_subject_for_new_lesson)
     subjects = await get_all_subjects(session)
-    keyboard = get_subjects_keyboard(subjects, admin="отмена")
+    keyboard = create_subjects_keyboard(subjects, {AdminKeysData.schedule.value: AdminKeysText.cancel.value})
     await query.message.answer(text=LEXICON_RU["list_subjects"], reply_markup=keyboard)
 
 
@@ -253,28 +255,28 @@ async def choose_date_for_new_lesson(query: CallbackQuery, state: FSMContext, se
         reply_markup=await SimpleCalendar(locale="ru_RU").start_calendar(),
     )
     await query.message.answer(LEXICON_RU["press_for_cancel"],
-                               reply_markup=create_inline_kb(admin="отмена"),
+                               reply_markup=create_inline_keyboard(
+                                   {AdminKeysData.schedule.value: AdminKeysText.cancel.value}),
                                )
 
-
-@router.callback_query(StateFilter(AdminStates.choose_date_for_next_lesson), SimpleCalendarCallback.filter())
-async def process_lesson_date_selection(
-        callback_query: CallbackQuery,
-        callback_data: CallbackData,
-        state: FSMContext,
-        session: AsyncSession,
-):
-    calendar = SimpleCalendar(locale="ru_RU")
-    selected, date = await calendar.process_selection(callback_query, callback_data)
-    date_formatted = date.strftime("%d.%m.%Y")
-    await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
-    if selected:
-        keyboard = create_inline_kb(admin="отмена")
-        await callback_query.message.answer(
-            f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
-            + LEXICON_RU["choose_time_for_lesson"], reply_markup=keyboard
-        )
-        await state.set_state(AdminStates.choose_next_lesson_time)
+    @router.callback_query(StateFilter(AdminStates.choose_date_for_next_lesson), SimpleCalendarCallback.filter())
+    async def process_lesson_date_selection(
+            callback_query: CallbackQuery,
+            callback_data: CallbackData,
+            state: FSMContext,
+            session: AsyncSession,
+    ):
+        calendar = SimpleCalendar(locale="ru_RU")
+        selected, date = await calendar.process_selection(callback_query, callback_data)
+        date_formatted = date.strftime("%d.%m.%Y")
+        await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
+        if selected:
+            keyboard = create_inline_keyboard({AdminKeysData.admin.value:AdminKeysText.cancel.value})
+            await callback_query.message.answer(
+                f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
+                + LEXICON_RU["choose_time_for_lesson"], reply_markup=keyboard
+            )
+            await state.set_state(AdminStates.choose_next_lesson_time)
 
 
 @router.message(StateFilter(AdminStates.choose_next_lesson_time))
@@ -288,11 +290,11 @@ async def process_lesson_time_selection(
         lesson_dttm = create_datetime_from_parts(data[NEXT_LESSON_DATE_STATE_KEY], data[NEXT_LESSON_TIME_STATE_KEY])
         lesson = Lesson(student_id=data["student_id"], subject_id=data["subject_id"],
                         lesson_dttm=lesson_dttm)
-        keyboard = create_inline_kb(admin="Главное меню")
+        keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.main_menu.value})
         await add_new_lesson(session, lesson)
         await message.answer(text=LEXICON_RU["lesson_saved_succesfully"], reply_markup=keyboard)
     else:
-        keyboard = create_inline_kb(admin="Отмена")
+        keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.cancel.value})
         await message.answer(text=LEXICON_RU["wrong_lesson_time_format"], reply_markup=keyboard)
 
 
