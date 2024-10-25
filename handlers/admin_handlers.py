@@ -1,13 +1,11 @@
-from datetime import datetime
-
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
-from aiogram.types import Message, CallbackQuery, InlineKeyboardButton
-from aiogram_calendar import SimpleCalendar, get_user_locale
-from aiogram_calendar.schemas import SimpleCalAct, SimpleCalendarCallback
+from aiogram.types import Message, CallbackQuery
+from aiogram_calendar import SimpleCalendar
+from aiogram_calendar.schemas import SimpleCalendarCallback
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.lesson import Lesson
@@ -33,7 +31,7 @@ from states.AdminStateDataKeys import AdminStateDataKeys
 from states.admin_states import AdminStates
 from utils.datetime_utils import create_datetime_from_parts, check_time_str_format
 from utils.formatting import make_bold
-from utils.rendering import render_lessons_for_student
+
 
 # Инициализируем роутер уровня модуля
 router = Router()
