@@ -1,9 +1,9 @@
-from sqlalchemy import select, cast
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.reminder import Reminder
-from lexicon.lexicon import LEXICON_RU
+from lexicon.lexicon import LexiconRu
 
 
 async def save_reminder(session: AsyncSession, text: str):
@@ -17,7 +17,7 @@ async def get_last_reminder(session: AsyncSession) -> str:
     if current_reminder is not None:
         return current_reminder.text
     else:
-        return LEXICON_RU["reminder_not_set"]
+        return LexiconRu.reminder_not_set.value
 
 
 async def __get_last_reminder_from_db(session: AsyncSession):

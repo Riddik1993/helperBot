@@ -2,7 +2,7 @@ from sqlalchemy import select, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.homework import Homework
-from lexicon.lexicon import LEXICON_RU
+from lexicon.lexicon import LexiconRu
 from utils.formatting import make_bold
 
 
@@ -13,15 +13,15 @@ async def get_last_homework_for_student(session: AsyncSession, student_id: int) 
     if student_homework is not None:
         homework_dttm = student_homework.created_at.strftime("%d.%m.%Y %H:%M")
         homework_text = (
-            make_bold(f"Задание от {homework_dttm}:\n") + student_homework.text
+                make_bold(f"Задание от {homework_dttm}:\n") + student_homework.text
         )
     else:
-        homework_text = LEXICON_RU["homework_not_found"]
+        homework_text = LexiconRu.homework_not_found.value
     return homework_text
 
 
 async def save_homework_for_student(
-    session: AsyncSession, student_id: int, homework_text: str
+        session: AsyncSession, student_id: int, homework_text: str
 ):
     stmt = insert(Homework).values({"student_id": student_id, "text": homework_text})
     await session.execute(stmt)
@@ -29,7 +29,7 @@ async def save_homework_for_student(
 
 
 async def __get_last_homework_for_student_from_db(
-    session: AsyncSession, student_id: int
+        session: AsyncSession, student_id: int
 ) -> Homework | None:
     stmt = (
         select(Homework)

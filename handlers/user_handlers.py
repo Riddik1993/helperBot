@@ -12,7 +12,7 @@ from keyboards.StudentKeysData import StudentKeysData
 from keyboards.inline_keyboard import create_inline_keyboard
 from keyboards.user_menu_keyboards import get_user_main_menu_keyboard
 from lexicon.StudentKeysText import StudentKeysText
-from lexicon.lexicon import LEXICON_RU
+from lexicon.lexicon import LexiconRu
 
 router = Router()
 
@@ -20,13 +20,13 @@ router = Router()
 @router.message(CommandStart())
 async def process_start_command(message: Message):
     main_keyboard = get_user_main_menu_keyboard()
-    await message.answer(text=LEXICON_RU["/start"], reply_markup=main_keyboard)
+    await message.answer(text=LexiconRu.start.value, reply_markup=main_keyboard)
 
 
 @router.callback_query(F.data == StudentKeysData.main_user_menu.value)
 async def edit_to_main_user_menu(query: CallbackQuery, state: FSMContext):
     main_keyboard = get_user_main_menu_keyboard()
-    await query.message.edit_text(text=LEXICON_RU["/start"])
+    await query.message.edit_text(text=LexiconRu.start.value)
     await query.message.edit_reply_markup(reply_markup=main_keyboard)
     await state.clear()
 
@@ -48,6 +48,6 @@ async def show_last_homework(query: CallbackQuery, session: AsyncSession):
 @router.callback_query(F.data == StudentKeysData.student_schedule.value)
 async def show_student_lessons(query: CallbackQuery, session: AsyncSession):
     student_lessons = await get_all_lessons_by_user(session, query.from_user.id)
-    lessons_txt = LEXICON_RU["list_schedule_for_student"] + render_lessons_for_student(student_lessons)
+    lessons_txt = LexiconRu.list_schedule_for_student.value + render_lessons_for_student(student_lessons)
     keyboard = create_inline_keyboard({StudentKeysData.main_user_menu.value: StudentKeysText.back.value})
     await query.message.answer(text=lessons_txt, reply_markup=keyboard)
