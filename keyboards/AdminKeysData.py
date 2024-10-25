@@ -15,4 +15,5 @@ class AdminKeysData(enum.Enum):
     add_subject = "add_subject"
     add_lesson = "add_lesson"
     confirm_delete_subject = "confirm_delete_subject"
+    confirm_delete_lesson = "confirm_delete_lesson"
     edit_student_homework = "edit_student_homework"

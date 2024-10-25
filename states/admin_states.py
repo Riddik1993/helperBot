@@ -13,3 +13,5 @@ class AdminStates(StatesGroup):
     choose_subject_for_new_lesson = State()
     choose_date_for_next_lesson = State()  # Состояние выбора даты следующего урока
     choose_next_lesson_time = State()  # Состояние выбора времени следующего урока
+    list_lessons = State()  # Состояние просмотра расписания ученика
+    deleting_lesson = State()  # Состояние удаления урока из расписания

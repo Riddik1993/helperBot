@@ -8,6 +8,7 @@ class AdminKeysText(Enum):
     change_reminder = "изменить памятку"
     list_subjects = "мои предметы"
     go_to_list_subjects = "к списку предметов"
+    go_to_schedule = "к расписанию"
     add_subject = "добавить предмет"
     add_lesson = "добавить урок"
     main_menu = "главное меню"

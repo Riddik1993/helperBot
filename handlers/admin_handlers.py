@@ -16,7 +16,7 @@ from database.services.homework_services import (
     get_last_homework_for_student,
     save_homework_for_student,
 )
-from database.services.lesson_services import get_all_lessons_by_user, add_new_lesson
+from database.services.lesson_services import get_all_lessons_by_user, add_new_lesson, delete_lesson_by_id
 from database.services.reminder_services import get_last_reminder, save_reminder
 from database.services.subject_services import get_all_subjects, save_new_subject, delete_subject
 from database.services.user_services import get_all_users, get_full_user_name_by_id
@@ -24,14 +24,16 @@ from filters.AdminFilter import IsAdmin
 from keyboards.AdminKeysData import AdminKeysData
 from keyboards.admin_menu_keyboards import (
     get_admin_main_menu_keyboard,
-    create_subjects_keyboard, create_students_keyboard,
+    create_subjects_keyboard, create_students_keyboard, create_lessons_keyboard,
 )
 from keyboards.inline_keyboard import create_inline_keyboard
 from lexicon.AdminKeysText import AdminKeysText
 from lexicon.lexicon import LexiconRu
+from states.AdminStateDataKeys import AdminStateDataKeys
 from states.admin_states import AdminStates
 from utils.datetime_utils import create_datetime_from_parts, check_time_str_format
 from utils.formatting import make_bold
+from utils.rendering import render_lessons_for_student
 
 # Инициализируем роутер уровня модуля
 router = Router()
@@ -228,11 +230,34 @@ async def list_schedule_for_student(
     student_id = int(query.data)
     await state.set_data({STUDENT_ID_STATE_KEY: student_id})
     lessons = await get_all_lessons_by_user(session, student_id)
-    lessons_txt = LexiconRu.list_schedule_for_student.value + render_lessons_for_student(lessons)
-    keyboard = create_inline_keyboard({AdminKeysData.schedule.value: AdminKeysText.back.value,
-                                       AdminKeysData.add_lesson.value: AdminKeysText.add_lesson.value
-                                       })
+    lessons_txt = LexiconRu.list_schedule_for_student_admin.value
+
+    keyboard = create_lessons_keyboard(lessons, {AdminKeysData.schedule.value: AdminKeysText.back.value,
+                                                 AdminKeysData.add_lesson.value: AdminKeysText.add_lesson.value
+                                                 })
+    await state.set_state(AdminStates.list_lessons)
     await query.message.answer(text=lessons_txt, reply_markup=keyboard)
+
+
+@router.callback_query(StateFilter(AdminStates.list_lessons))
+async def confirm_to_delete_lesson(query: CallbackQuery, state: FSMContext, session: AsyncSession):
+    keyboard = create_inline_keyboard({AdminKeysData.confirm_delete_lesson.value: AdminKeysText.agree.value,
+                                       AdminKeysData.schedule.value: AdminKeysText.cancel.value})
+    await state.set_state(AdminStates.deleting_lesson)
+    await state.set_data({AdminStateDataKeys.lesson_id.value: int(query.data)})
+    await query.message.answer(LexiconRu.confirm_delete_lesson.value, reply_markup=keyboard)
+
+
+@router.callback_query(StateFilter(AdminStates.deleting_lesson),
+                       F.data == AdminKeysData.confirm_delete_lesson.value)
+async def process_delete_lesson(query: CallbackQuery, state: FSMContext, session: AsyncSession):
+    state_data = await state.get_data()
+    lesson_id = state_data[AdminStateDataKeys.lesson_id.value]
+    keyboard = create_inline_keyboard({AdminKeysData.schedule.value: AdminKeysText.go_to_schedule.value,
+                                       AdminKeysData.admin.value: AdminKeysText.main_menu.value})
+    await delete_lesson_by_id(session, lesson_id)
+    await state.clear()
+    await query.message.answer(LexiconRu.subject_deleted.value, reply_markup=keyboard)
 
 
 @router.callback_query(F.data == AdminKeysData.add_lesson.value)
@@ -296,9 +321,3 @@ async def process_lesson_time_selection(
     else:
         keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.cancel.value})
         await message.answer(text=LexiconRu.wrong_lesson_time_format.value, reply_markup=keyboard)
-
-
-def render_lessons_for_student(lessons: list[Lesson]) -> str:
-    lessons_str_lst = [f"{lesson.lesson_dttm.strftime('%d.%m.%Y %H:%M')} - {lesson.subject.name}" for lesson in
-                       lessons]
-    return '\n'.join(lessons_str_lst)
