@@ -281,14 +281,14 @@ async def choose_date_for_new_lesson(query: CallbackQuery, state: FSMContext, se
                                    {AdminKeysData.schedule.value: AdminKeysText.cancel.value}),
                                )
 
-    @router.callback_query(StateFilter(AdminStates.choose_date_for_next_lesson), SimpleCalendarCallback.filter())
-    async def process_lesson_date_selection(
+@router.callback_query(StateFilter(AdminStates.choose_date_for_next_lesson), SimpleCalendarCallback.filter())
+async def process_lesson_date_selection(
             callback_query: CallbackQuery,
             callback_data: CallbackData,
             state: FSMContext,
             session: AsyncSession,
     ):
-        calendar = SimpleCalendar(locale="ru_RU")
+        calendar = SimpleCalendar(locale="ru_RU.utf8")
         selected, date = await calendar.process_selection(callback_query, callback_data)
         date_formatted = date.strftime("%d.%m.%Y")
         await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
