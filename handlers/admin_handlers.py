@@ -32,7 +32,6 @@ from states.admin_states import AdminStates
 from utils.datetime_utils import create_datetime_from_parts, check_time_str_format
 from utils.formatting import make_bold
 
-
 # Инициализируем роутер уровня модуля
 router = Router()
 router.message.filter(IsAdmin())
@@ -237,6 +236,15 @@ async def list_schedule_for_student(
     await query.message.answer(text=lessons_txt, reply_markup=keyboard)
 
 
+@router.callback_query(F.data == AdminKeysData.add_lesson.value)
+async def choose_subject_for_new_lesson(query: CallbackQuery, state: FSMContext, session: AsyncSession
+                                        ):
+    await state.set_state(AdminStates.choose_subject_for_new_lesson)
+    subjects = await get_all_subjects(session)
+    keyboard = create_subjects_keyboard(subjects, {AdminKeysData.schedule.value: AdminKeysText.cancel.value})
+    await query.message.answer(text=LexiconRu.choose_subject.value, reply_markup=keyboard)
+
+
 @router.callback_query(StateFilter(AdminStates.list_lessons))
 async def confirm_to_delete_lesson(query: CallbackQuery, state: FSMContext, session: AsyncSession):
     keyboard = create_inline_keyboard({AdminKeysData.confirm_delete_lesson.value: AdminKeysText.agree.value,
@@ -256,15 +264,6 @@ async def process_delete_lesson(query: CallbackQuery, state: FSMContext, session
     await delete_lesson_by_id(session, lesson_id)
     await state.clear()
     await query.message.answer(LexiconRu.subject_deleted.value, reply_markup=keyboard)
-
-
-@router.callback_query(F.data == AdminKeysData.add_lesson.value)
-async def choose_subject_for_new_lesson(query: CallbackQuery, state: FSMContext, session: AsyncSession
-                                        ):
-    await state.set_state(AdminStates.choose_subject_for_new_lesson)
-    subjects = await get_all_subjects(session)
-    keyboard = create_subjects_keyboard(subjects, {AdminKeysData.schedule.value: AdminKeysText.cancel.value})
-    await query.message.answer(text=LexiconRu.choose_subject.value, reply_markup=keyboard)
 
 
 @router.callback_query(StateFilter(AdminStates.choose_subject_for_new_lesson))
