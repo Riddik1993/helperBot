@@ -26,6 +26,6 @@ def load_config() -> Configuration:
     tg_api = TelegramApi(token, list(map(int, admins)))
 
     db_dsn = os.environ.get("DB_DSN")
-    db_echo = os.environ.get("DB_DSN")
+    db_echo = os.environ.get("DB_ECHO")
     db_config = DatabaseConfig(db_dsn, bool(db_echo))
     return Configuration(telegram=tg_api, db=db_config)
