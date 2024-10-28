@@ -7,12 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.services.homework_services import get_last_homework_for_student
 from database.services.lesson_services import get_all_lessons_by_user
 from database.services.reminder_services import get_last_reminder
-from handlers.admin_handlers import render_lessons_for_student
+
 from keyboards.StudentKeysData import StudentKeysData
 from keyboards.inline_keyboard import create_inline_keyboard
 from keyboards.user_menu_keyboards import get_user_main_menu_keyboard
 from lexicon.StudentKeysText import StudentKeysText
 from lexicon.lexicon import LexiconRu
+from utils.rendering import render_lessons_for_student
 
 router = Router()
 
