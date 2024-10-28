@@ -274,7 +274,7 @@ async def choose_date_for_new_lesson(query: CallbackQuery, state: FSMContext, se
     await state.update_data({SUBJECT_ID_STATE_KEY: subject_id})
     await query.message.answer(
         LexiconRu.choose_date_for_lesson.value,
-        reply_markup=await SimpleCalendar(locale="ru_RU.utf8").start_calendar(),
+        reply_markup=await SimpleCalendar(locale="ru_RU").start_calendar(),
     )
     await query.message.answer(LexiconRu.press_for_cancel.value,
                                reply_markup=create_inline_keyboard(
