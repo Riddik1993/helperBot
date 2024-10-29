@@ -21,7 +21,7 @@ class LexiconRu(enum.Enum):
     homework_success_saving = "Домашнее задание обновлено"
     list_schedule_for_student_admin = "Расписание.\nНажмите на урок, чтобы удалить его." + \
                                       "\nЛибо нажмите 'добавить' для нового урока"
-    list_schedule_for_student = "Моё расписание:\n"
+    list_schedule_for_student = "Моё расписание:\n\n"
     choose_subject = "Выберите предмет"
     choose_date_for_lesson = "Пожалуйста, выберите дату следующего занятия:"
     press_for_cancel = "Нажмите здесь для отмены"
