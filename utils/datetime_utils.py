@@ -3,8 +3,9 @@ import re
 
 
 def create_datetime_from_parts(date: str, time: str) -> datetime:
-    lesson_dttm_str = date + " " + time
-    return datetime.strptime(lesson_dttm_str, "%d.%m.%Y %H:%M")
+    moscow_timezone_str = "+0300"
+    lesson_dttm_str = date + " " + time + moscow_timezone_str
+    return datetime.strptime(lesson_dttm_str, "%d.%m.%Y %H:%M%z")
 
 
 def check_time_str_format(time: str) -> bool:
