@@ -36,14 +36,16 @@ async def edit_to_main_user_menu(query: CallbackQuery, state: FSMContext):
 async def process_reminder_command(query: CallbackQuery, session: AsyncSession):
     last_reminder = await get_last_reminder(session)
     keyboard = create_inline_keyboard({StudentKeysData.main_user_menu.value: StudentKeysText.back.value})
-    await query.message.answer(text=last_reminder, reply_markup=keyboard)
+    await query.message.edit_text(text=last_reminder)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(F.data == StudentKeysData.tasks.value)
 async def show_last_homework(query: CallbackQuery, session: AsyncSession):
     last_homework = await get_last_homework_for_student(session, query.from_user.id)
     keyboard = create_inline_keyboard({StudentKeysData.main_user_menu.value: StudentKeysText.back.value})
-    await query.message.answer(text=last_homework, reply_markup=keyboard)
+    await query.message.edit_text(text=last_homework)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(F.data == StudentKeysData.student_schedule.value)
@@ -51,4 +53,5 @@ async def show_student_lessons(query: CallbackQuery, session: AsyncSession):
     student_lessons = await get_all_lessons_by_user(session, query.from_user.id)
     lessons_txt = LexiconRu.list_schedule_for_student.value + render_lessons_for_student(student_lessons)
     keyboard = create_inline_keyboard({StudentKeysData.main_user_menu.value: StudentKeysText.back.value})
-    await query.message.answer(text=lessons_txt, reply_markup=keyboard)
+    await query.message.edit_text(text=lessons_txt)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
