@@ -2,7 +2,7 @@ import enum
 
 
 class LexiconRu(enum.Enum):
-    start = "Привет!\n\n" "Я бот-помощник Анастасии"
+    start = "Бот-помощник Анастасии Фроловой\n\n"
     list_subjects_in_admin = "Список предметов.\nНажмите на предмет, чтобы удалить.\nЛибо нажмите добавить для " + \
                              "нового предмета"
     propose_add_subject = "Введите название нового предмета"
@@ -10,6 +10,7 @@ class LexiconRu(enum.Enum):
     admin = "Привет! Я Ваш бот-помощник"
     change_reminder = "Вот старый текст памятки.\nВведите новый текст и отправьте сообщение\n\n"
     reminder_refreshed = "Памятка обновлена!"
+    show_reminder_to_student = "Памятка перед занятием:\n\n"
     new_subject_saved = "Новый предмет сохранен успешно!"
     confirm_delete_subject = "Точно удалить предмет?\n Вместе с предметом удалятся и связанные уроки!"
     confirm_delete_lesson = "Точно удалить урок?"
@@ -22,6 +23,7 @@ class LexiconRu(enum.Enum):
     list_schedule_for_student_admin = "Расписание.\nНажмите на урок, чтобы удалить его." + \
                                       "\nЛибо нажмите 'добавить' для нового урока"
     list_schedule_for_student = "Моё расписание:\n\n"
+    show_homework_tu_student = "Мои задания\n\n"
     choose_subject = "Выберите предмет"
     choose_date_for_lesson = "Пожалуйста, выберите дату следующего занятия:"
     press_for_cancel = "Нажмите здесь для отмены"
