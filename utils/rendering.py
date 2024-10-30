@@ -1,8 +1,11 @@
+from zoneinfo import ZoneInfo
+
 from database.models.lesson import Lesson
 
 
 def render_lesson_text(lesson: Lesson) -> str:
-    return f"{lesson.lesson_dttm.strftime('%d.%m.%Y %H:%M')} - {lesson.subject.name}"
+    lesson_str = lesson.lesson_dttm.astimezone(ZoneInfo('Europe/Moscow')).strftime("%d.%m.%Y %H:%M")
+    return f"{lesson_str} - {lesson.subject.name}"
 
 
 def render_lessons_for_student(lessons: list[Lesson]) -> str:
