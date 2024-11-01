@@ -14,7 +14,8 @@ from database.services.homework_services import (
     get_last_homework_for_student,
     save_homework_for_student,
 )
-from database.services.lesson_services import get_all_lessons_by_user, add_new_lesson, delete_lesson_by_id
+from database.services.lesson_services import add_new_lesson, delete_lesson_by_id, \
+    get_actual_lessons_by_user
 from database.services.reminder_services import get_last_reminder, save_reminder
 from database.services.subject_services import get_all_subjects, save_new_subject, delete_subject
 from database.services.user_services import get_all_users, get_full_user_name_by_id
@@ -227,7 +228,7 @@ async def list_schedule_for_student(
     await state.clear()
     student_id = int(query.data)
     await state.set_data({STUDENT_ID_STATE_KEY: student_id})
-    lessons = await get_all_lessons_by_user(session, student_id)
+    lessons = await get_actual_lessons_by_user(session, student_id)
     lessons_txt = LexiconRu.list_schedule_for_student_admin.value
 
     keyboard = create_lessons_keyboard(lessons, {AdminKeysData.schedule.value: AdminKeysText.back.value,
