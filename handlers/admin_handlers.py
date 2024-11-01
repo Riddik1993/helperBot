@@ -74,9 +74,8 @@ async def process_change_reminder(
 ):
     current_reminder = await get_last_reminder(session)
     keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.back.value})
-    await query.message.answer(
-        text=LexiconRu.change_reminder.value + current_reminder, reply_markup=keyboard
-    )
+    await query.message.edit_text(LexiconRu.change_reminder.value + current_reminder)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
     await state.set_state(AdminStates.edit_reminder_text)
 
 
@@ -112,8 +111,8 @@ async def list_subjects(
 async def propose_new_subject_saving(
         query: CallbackQuery, state: FSMContext):
     keyboard = create_inline_keyboard({AdminKeysData.list_subjects.value: AdminKeysText.back.value})
-    await query.message.answer(
-        text=LexiconRu.propose_add_subject.value, reply_markup=keyboard)
+    await query.message.edit_text(LexiconRu.propose_add_subject.value)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
     await state.set_state(AdminStates.adding_new_subject)
 
 
@@ -169,14 +168,12 @@ async def process_user_list(
     students = await get_all_users(session)
     if len(students) == 0:
         keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.back.value})
-        await query.message.answer(
-            text=LexiconRu.no_students.value, reply_markup=keyboard
-        )
+        await query.message.edit_text(LexiconRu.no_students.value)
+        await query.message.edit_reply_markup(reply_markup=keyboard)
     else:
         keyboard = create_students_keyboard(students, {AdminKeysData.admin.value: AdminKeysText.back.value})
-        await query.message.answer(
-            text=LexiconRu.choose_student.value, reply_markup=keyboard
-        )
+        await query.message.edit_text(LexiconRu.choose_student.value)
+        await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(StateFilter(AdminStates.list_homework))
@@ -192,7 +189,8 @@ async def process_homework_for_student(
         {AdminKeysData.edit_student_homework.value: AdminKeysText.edit_student_homework.value,
          AdminKeysData.homework.value: AdminKeysText.back.value},
         width=2)
-    await query.message.answer(text=homework_text, reply_markup=keyboard)
+    await query.message.edit_text(homework_text)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(StateFilter(AdminStates.process_homework_for_student))
@@ -229,13 +227,12 @@ async def list_schedule_for_student(
     student_id = int(query.data)
     await state.set_data({STUDENT_ID_STATE_KEY: student_id})
     lessons = await get_actual_lessons_by_user(session, student_id)
-    lessons_txt = LexiconRu.list_schedule_for_student_admin.value
-
     keyboard = create_lessons_keyboard(lessons, {AdminKeysData.schedule.value: AdminKeysText.back.value,
                                                  AdminKeysData.add_lesson.value: AdminKeysText.add_lesson.value
                                                  })
     await state.set_state(AdminStates.list_lessons)
-    await query.message.answer(text=lessons_txt, reply_markup=keyboard)
+    await query.message.edit_text(LexiconRu.list_schedule_for_student_admin.value)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(F.data == AdminKeysData.add_lesson.value)
@@ -244,7 +241,8 @@ async def choose_subject_for_new_lesson(query: CallbackQuery, state: FSMContext,
     await state.set_state(AdminStates.choose_subject_for_new_lesson)
     subjects = await get_all_subjects(session)
     keyboard = create_subjects_keyboard(subjects, {AdminKeysData.schedule.value: AdminKeysText.cancel.value})
-    await query.message.answer(text=LexiconRu.choose_subject.value, reply_markup=keyboard)
+    await query.message.edit_text(LexiconRu.choose_subject.value)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(StateFilter(AdminStates.list_lessons))
@@ -253,7 +251,8 @@ async def confirm_to_delete_lesson(query: CallbackQuery, state: FSMContext, sess
                                        AdminKeysData.schedule.value: AdminKeysText.cancel.value})
     await state.set_state(AdminStates.deleting_lesson)
     await state.set_data({AdminStateDataKeys.lesson_id.value: int(query.data)})
-    await query.message.answer(LexiconRu.confirm_delete_lesson.value, reply_markup=keyboard)
+    await query.message.edit_text(LexiconRu.confirm_delete_lesson.value)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(StateFilter(AdminStates.deleting_lesson),
@@ -265,7 +264,8 @@ async def process_delete_lesson(query: CallbackQuery, state: FSMContext, session
                                        AdminKeysData.admin.value: AdminKeysText.main_menu.value})
     await delete_lesson_by_id(session, lesson_id)
     await state.clear()
-    await query.message.answer(LexiconRu.subject_deleted.value, reply_markup=keyboard)
+    await query.message.edit_text(LexiconRu.lesson_deleted.value)
+    await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(StateFilter(AdminStates.choose_subject_for_new_lesson))
@@ -273,11 +273,11 @@ async def choose_date_for_new_lesson(query: CallbackQuery, state: FSMContext, se
                                      ):
     await state.set_state(AdminStates.choose_date_for_next_lesson)
     subject_id = int(query.data)
+    calendar_keyboard = await SimpleCalendar(locale=config.app.locale).start_calendar()
     await state.update_data({SUBJECT_ID_STATE_KEY: subject_id})
-    await query.message.answer(
-        LexiconRu.choose_date_for_lesson.value,
-        reply_markup=await SimpleCalendar(locale=config.app.locale).start_calendar(),
-    )
+    await query.message.edit_text(
+        LexiconRu.choose_date_for_lesson.value)
+    await query.message.edit_reply_markup(reply_markup=calendar_keyboard)
     await query.message.answer(LexiconRu.press_for_cancel.value,
                                reply_markup=create_inline_keyboard(
                                    {AdminKeysData.schedule.value: AdminKeysText.cancel.value}),
