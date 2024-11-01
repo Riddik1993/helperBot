@@ -5,7 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.services.homework_services import get_last_homework_for_student
-from database.services.lesson_services import get_all_lessons_by_user
+from database.services.lesson_services import get_actual_lessons_by_user
 from database.services.reminder_services import get_last_reminder
 
 from keyboards.StudentKeysData import StudentKeysData
@@ -53,7 +53,7 @@ async def show_last_homework(query: CallbackQuery, session: AsyncSession):
 
 @router.callback_query(F.data == StudentKeysData.student_schedule.value)
 async def show_student_lessons(query: CallbackQuery, session: AsyncSession):
-    student_lessons = await get_all_lessons_by_user(session, query.from_user.id)
+    student_lessons = await get_actual_lessons_by_user(session, query.from_user.id)
     lessons_txt = make_bold(LexiconRu.list_schedule_for_student.value) + render_lessons_for_student(student_lessons)
     keyboard = create_inline_keyboard({StudentKeysData.main_user_menu.value: StudentKeysText.back.value})
     await query.message.edit_text(text=lessons_txt)

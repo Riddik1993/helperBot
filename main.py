@@ -10,10 +10,10 @@ from handlers import user_handlers, admin_handlers
 from middlewares.DbSessionMiddleware import DbSessionMiddleware
 from middlewares.TrackAllUsersMiddleware import TrackAllUsersMiddleware
 
+config: Configuration = load_config()
+
 
 async def main():
-    config: Configuration = load_config()
-
     bot = Bot(
         token=config.telegram.token, default=DefaultBotProperties(parse_mode="HTML")
     )

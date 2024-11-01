@@ -1,3 +1,6 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from sqlalchemy import select, insert, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,6 +14,20 @@ async def get_all_lessons_by_user(
     stmt = (
         select(Lesson)
         .where(Lesson.student_id == student_id)
+        .join(Subject)
+        .order_by(Lesson.created_at.desc())
+    )
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
+
+async def get_actual_lessons_by_user(
+        session: AsyncSession, student_id: int
+) -> list[Lesson]:
+    stmt = (
+        select(Lesson)
+        .where(Lesson.student_id == student_id)
+        .where(Lesson.lesson_dttm >= datetime.now(ZoneInfo('Europe/Paris')).date())
         .join(Subject)
         .order_by(Lesson.created_at.desc())
     )

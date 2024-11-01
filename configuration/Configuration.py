@@ -15,9 +15,15 @@ class DatabaseConfig:
 
 
 @dataclass
+class AppConfig:
+    locale: str
+
+
+@dataclass
 class Configuration:
     telegram: TelegramApi
     db: DatabaseConfig
+    app: AppConfig
 
 
 def load_config() -> Configuration:
@@ -28,4 +34,7 @@ def load_config() -> Configuration:
     db_dsn = os.environ.get("DB_DSN")
     db_echo = os.environ.get("DB_ECHO")
     db_config = DatabaseConfig(db_dsn, bool(db_echo))
-    return Configuration(telegram=tg_api, db=db_config)
+
+    locale = os.environ.get("BOT_HELPER_LOCALE", "ru_RU.utf8")
+    app_config = AppConfig(locale)
+    return Configuration(telegram=tg_api, db=db_config, app=app_config)
