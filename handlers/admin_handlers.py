@@ -27,6 +27,7 @@ from keyboards.admin_menu_keyboards import (
 from keyboards.inline_keyboard import create_inline_keyboard
 from lexicon.AdminKeysText import AdminKeysText
 from lexicon.lexicon import LexiconRu
+from main import config
 from states.AdminStateDataKeys import AdminStateDataKeys
 from states.admin_states import AdminStates
 from utils.datetime_utils import create_datetime_from_parts, check_time_str_format
@@ -274,31 +275,32 @@ async def choose_date_for_new_lesson(query: CallbackQuery, state: FSMContext, se
     await state.update_data({SUBJECT_ID_STATE_KEY: subject_id})
     await query.message.answer(
         LexiconRu.choose_date_for_lesson.value,
-        reply_markup=await SimpleCalendar(locale="ru_RU.utf8").start_calendar(),
+        reply_markup=await SimpleCalendar(locale=config.app.locale).start_calendar(),
     )
     await query.message.answer(LexiconRu.press_for_cancel.value,
                                reply_markup=create_inline_keyboard(
                                    {AdminKeysData.schedule.value: AdminKeysText.cancel.value}),
                                )
 
+
 @router.callback_query(StateFilter(AdminStates.choose_date_for_next_lesson), SimpleCalendarCallback.filter())
 async def process_lesson_date_selection(
-            callback_query: CallbackQuery,
-            callback_data: CallbackData,
-            state: FSMContext,
-            session: AsyncSession,
-    ):
-        calendar = SimpleCalendar(locale="ru_RU.utf8")
-        selected, date = await calendar.process_selection(callback_query, callback_data)
-        date_formatted = date.strftime("%d.%m.%Y")
-        await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
-        if selected:
-            keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.cancel.value})
-            await callback_query.message.answer(
-                f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
-                + LexiconRu.choose_time_for_lesson.value, reply_markup=keyboard
-            )
-            await state.set_state(AdminStates.choose_next_lesson_time)
+        callback_query: CallbackQuery,
+        callback_data: CallbackData,
+        state: FSMContext,
+        session: AsyncSession,
+):
+    calendar = SimpleCalendar(locale=config.app.locale)
+    selected, date = await calendar.process_selection(callback_query, callback_data)
+    date_formatted = date.strftime("%d.%m.%Y")
+    await state.update_data({NEXT_LESSON_DATE_STATE_KEY: date_formatted})
+    if selected:
+        keyboard = create_inline_keyboard({AdminKeysData.admin.value: AdminKeysText.cancel.value})
+        await callback_query.message.answer(
+            f'Вы выбрали {date.strftime("%d.%m.%Y")}\n '
+            + LexiconRu.choose_time_for_lesson.value, reply_markup=keyboard
+        )
+        await state.set_state(AdminStates.choose_next_lesson_time)
 
 
 @router.message(StateFilter(AdminStates.choose_next_lesson_time))
