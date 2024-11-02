@@ -1,12 +1,12 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
-from aiogram.fsm.storage.memory import MemoryStorage
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from configuration import Configuration
 from configuration.Configuration import load_config
 from database.models.base import Base
 from handlers import user_handlers, admin_handlers
+from keyboards.menu_button import set_main_menu
 from middlewares.DbSessionMiddleware import DbSessionMiddleware
 from middlewares.TrackAllUsersMiddleware import TrackAllUsersMiddleware
 
@@ -21,6 +21,7 @@ async def main():
     dp.include_router(user_handlers.router)
     dp.include_router(admin_handlers.router)
     dp.workflow_data.update(config=config)
+    dp.startup.register(set_main_menu)
 
     engine = create_async_engine(url=config.db.dsn, echo=config.db.echo)
 

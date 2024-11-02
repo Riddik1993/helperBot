@@ -10,3 +10,4 @@ class StudentKeysData(enum.Enum):
     student_schedule = "student_schedule"
     tasks = "tasks"
     show_reminder = "show_reminder"
+    start = "/start"
