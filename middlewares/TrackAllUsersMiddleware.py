@@ -27,11 +27,12 @@ class TrackAllUsersMiddleware(BaseMiddleware):
         # Надо обновить данные пользователя, если он не в кэше
         if user_id not in self.cache:
             session: AsyncSession = data["session"]
+            last_name = event.from_user.last_name if event.from_user.last_name else ""
             await upsert_user(
                 session=session,
                 telegram_id=event.from_user.id,
                 first_name=event.from_user.first_name,
-                last_name=event.from_user.last_name,
+                last_name=last_name,
             )
             self.cache[user_id] = None
         return await handler(event, data)
