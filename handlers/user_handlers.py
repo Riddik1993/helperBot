@@ -4,7 +4,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.services.homework_services import get_last_homework_for_student
+from database.services.homework_services import (
+    get_last_homework_for_student_from_db,
+    enrich_homework_text,
+)
 from database.services.lesson_services import get_actual_lessons_by_user
 from database.services.reminder_services import get_last_reminder
 
@@ -37,24 +40,43 @@ async def edit_to_main_user_menu(query: CallbackQuery, state: FSMContext):
 async def process_reminder_command(query: CallbackQuery, session: AsyncSession):
     last_reminder = await get_last_reminder(session)
     msg_text = make_bold(LexiconRu.show_reminder_to_student.value) + last_reminder
-    keyboard = create_inline_keyboard({StudentKeysData.main_user_menu.value: StudentKeysText.back.value})
+    keyboard = create_inline_keyboard(
+        {StudentKeysData.main_user_menu.value: StudentKeysText.back.value}
+    )
     await query.message.edit_text(text=msg_text)
     await query.message.edit_reply_markup(reply_markup=keyboard)
 
 
 @router.callback_query(F.data == StudentKeysData.tasks.value)
 async def show_last_homework(query: CallbackQuery, session: AsyncSession):
-    last_homework = await get_last_homework_for_student(session, query.from_user.id)
-    msg_text = make_bold(LexiconRu.show_homework_tu_student.value) + last_homework
-    keyboard = create_inline_keyboard({StudentKeysData.main_user_menu.value: StudentKeysText.back.value})
+    last_homework = await get_last_homework_for_student_from_db(
+        session, query.from_user.id
+    )
+    if last_homework:
+        homework_enriched = enrich_homework_text(last_homework)
+        msg_text = (
+            make_bold(LexiconRu.show_homework_tu_student.value) + homework_enriched.text
+        )
+    else:
+        msg_text = LexiconRu.homework_not_found.value
+
+    keyboard = create_inline_keyboard(
+        {StudentKeysData.main_user_menu.value: StudentKeysText.back.value}
+    )
     await query.message.edit_text(text=msg_text)
     await query.message.edit_reply_markup(reply_markup=keyboard)
+    if last_homework.files:
+        await query.message.reply_document(last_homework.files[0])
 
 
 @router.callback_query(F.data == StudentKeysData.student_schedule.value)
 async def show_student_lessons(query: CallbackQuery, session: AsyncSession):
     student_lessons = await get_actual_lessons_by_user(session, query.from_user.id)
-    lessons_txt = make_bold(LexiconRu.list_schedule_for_student.value) + render_lessons_for_student(student_lessons)
-    keyboard = create_inline_keyboard({StudentKeysData.main_user_menu.value: StudentKeysText.back.value})
+    lessons_txt = make_bold(
+        LexiconRu.list_schedule_for_student.value
+    ) + render_lessons_for_student(student_lessons)
+    keyboard = create_inline_keyboard(
+        {StudentKeysData.main_user_menu.value: StudentKeysText.back.value}
+    )
     await query.message.edit_text(text=lessons_txt)
     await query.message.edit_reply_markup(reply_markup=keyboard)
