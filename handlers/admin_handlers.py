@@ -13,7 +13,7 @@ from database.models.subject import Subject
 from database.services.homework_services import (
     save_homework_for_student,
     get_last_homework_for_student_from_db,
-    enrich_homework_text,
+    prepare_homework_msg_text,
 )
 from database.services.lesson_services import (
     add_new_lesson,
@@ -219,12 +219,9 @@ async def process_homework_for_student(
     student_full_name = await get_full_user_name_by_id(session, student_id)
     await state.set_state(AdminStates.process_homework_for_student)
     await state.set_data({"student_id": student_id, "student_name": student_full_name})
+
     last_homework = await get_last_homework_for_student_from_db(session, student_id)
-    if last_homework:
-        homework_enriched = enrich_homework_text(last_homework)
-        homework_text = homework_enriched.text
-    else:
-        homework_text = LexiconRu.homework_not_found.value
+    homework_msg_text = prepare_homework_msg_text(last_homework)
 
     keyboard = create_inline_keyboard(
         {
@@ -233,10 +230,12 @@ async def process_homework_for_student(
         },
         width=2,
     )
-    await query.message.edit_text(homework_text)
+
+    await query.message.edit_text(homework_msg_text)
     await query.message.edit_reply_markup(reply_markup=keyboard)
-    if last_homework.files:
-        await query.message.reply_document(last_homework.files[0])
+    if last_homework:
+        if last_homework.files:
+            await query.message.reply_document(last_homework.files[0])
 
 
 @router.callback_query(StateFilter(AdminStates.process_homework_for_student))

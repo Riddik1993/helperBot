@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.services.homework_services import (
     get_last_homework_for_student_from_db,
-    enrich_homework_text,
+    prepare_homework_msg_text,
 )
 from database.services.lesson_services import get_actual_lessons_by_user
 from database.services.reminder_services import get_last_reminder
@@ -52,21 +52,16 @@ async def show_last_homework(query: CallbackQuery, session: AsyncSession):
     last_homework = await get_last_homework_for_student_from_db(
         session, query.from_user.id
     )
-    if last_homework:
-        homework_enriched = enrich_homework_text(last_homework)
-        msg_text = (
-            make_bold(LexiconRu.show_homework_tu_student.value) + homework_enriched.text
-        )
-    else:
-        msg_text = LexiconRu.homework_not_found.value
+    homework_msg_text = prepare_homework_msg_text(last_homework)
 
     keyboard = create_inline_keyboard(
         {StudentKeysData.main_user_menu.value: StudentKeysText.back.value}
     )
-    await query.message.edit_text(text=msg_text)
+    await query.message.edit_text(text=homework_msg_text)
     await query.message.edit_reply_markup(reply_markup=keyboard)
-    if last_homework.files:
-        await query.message.reply_document(last_homework.files[0])
+    if last_homework:
+        if last_homework.files:
+            await query.message.reply_document(last_homework.files[0])
 
 
 @router.callback_query(F.data == StudentKeysData.student_schedule.value)

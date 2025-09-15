@@ -9,13 +9,16 @@ from lexicon.lexicon import LexiconRu
 from utils.formatting import make_bold
 
 
-def enrich_homework_text(homework: Homework) -> Homework:
-    homework_dttm = homework.created_at.strftime("%d.%m.%Y %H:%M")
-    homework_task_text = (
-        homework.text if homework.text else LexiconRu.homework_withoout_text.value
-    )
-    homework.text = make_bold(f"Задание от {homework_dttm}:\n") + homework_task_text
-    return homework
+def prepare_homework_msg_text(homework: Optional[Homework]) -> str:
+    if homework:
+        homework_dttm = homework.created_at.strftime("%d.%m.%Y %H:%M")
+        homework_task_text = (
+            homework.text if homework.text else LexiconRu.homework_withoout_text.value
+        )
+
+        return make_bold(f"Задание от {homework_dttm}:\n") + homework_task_text
+    else:
+        return LexiconRu.homework_not_found.value
 
 
 async def save_homework_for_student(
