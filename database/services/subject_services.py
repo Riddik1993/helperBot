@@ -15,6 +15,7 @@ async def delete_subject(session: AsyncSession, subject_id: int):
     await session.execute(stmt)
     await session.commit()
 
+
 async def get_all_subjects(session: AsyncSession) -> list[Subject]:
     stmt = select(Subject)
     result = await session.execute(stmt)
