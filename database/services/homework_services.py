@@ -1,4 +1,7 @@
-from sqlalchemy import select, insert
+from typing import Optional
+
+from aiogram.types import Document
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.homework import Homework
@@ -21,10 +24,14 @@ async def get_last_homework_for_student(session: AsyncSession, student_id: int) 
 
 
 async def save_homework_for_student(
-        session: AsyncSession, student_id: int, homework_text: str
+        session: AsyncSession, student_id: int, homework_text: Optional[str],
+        document: Optional[Document] = None
 ):
-    stmt = insert(Homework).values({"student_id": student_id, "text": homework_text})
-    await session.execute(stmt)
+
+    student_homework = Homework(student_id=student_id,
+                                text=homework_text,
+                                files=[document.file_id] if document else [])
+    session.add(student_homework)
     await session.commit()
 
 

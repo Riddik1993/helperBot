@@ -15,3 +15,4 @@ class AdminStates(StatesGroup):
     choose_next_lesson_time = State()  # Состояние выбора времени следующего урока
     list_lessons = State()  # Состояние просмотра расписания ученика
     deleting_lesson = State()  # Состояние удаления урока из расписания
+    saving_homework = State()  # сохранение домашнего задания

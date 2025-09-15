@@ -202,15 +202,18 @@ async def propose_to_edit_homework_for_student(query: CallbackQuery, state: FSMC
             LexiconRu.propose_to_insert_homework.value + " " + make_bold(student_name)
     )
     await query.message.answer(text=answer_text, reply_markup=keyboard)
+    await state.set_state(AdminStates.saving_homework)
 
 
-@router.message(StateFilter(AdminStates.process_homework_for_student))
+@router.message(StateFilter(AdminStates.saving_homework))
 async def edit_homework_for_student(
         message: Message, state: FSMContext, session: AsyncSession
 ):
     data = await state.get_data()
     student_id = data["student_id"]
-    await save_homework_for_student(session, student_id, message.text)
+    text = message.text if message.text else message.caption
+
+    await save_homework_for_student(session, student_id, text, message.document)
     await state.set_state(AdminStates.list_homework)
     keyboard = create_inline_keyboard({AdminKeysData.homework.value: AdminKeysText.go_to_students_list.value,
                                        AdminKeysData.admin.value: AdminKeysText.main_menu.value})
